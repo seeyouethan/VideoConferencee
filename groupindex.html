@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <title>我的群聊</title>
+   <!-- 引入样式 -->
+   <link rel="stylesheet" href="css/Element-UI/index.css">
+   <link rel="stylesheet" type="text/css" href="css/iconfont.css">
+   <link rel="stylesheet" type="text/css" href="css/style.css">
+   <link rel="stylesheet" type="text/css" href="css/group.css">
+   <link rel="stylesheet" type="text/css" href="font-awesome-4.7.0/css/font-awesome.min.css">
+
+</head>
+
+<body>
+   <div id="app">
+      <el-container>
+         <el-main class="v-main">
+            <div class="group-div-top">
+               <el-button type="primary" icon="el-icon-plus" @click="createGroup" v-cloak>新建群聊</el-button>
+            </div>
+            <div>
+               <el-table :data="tableData" style="width: 100%">
+                  <el-table-column label="群组" width="200">
+                     <template slot-scope="scope">
+                        <span size="mini" v-on:dblclick="openChat" v-text="scope.row.Name" class="group-name"></span>
+                     </template>
+                  </el-table-column>
+                  <el-table-column label="操作">
+                     <template slot-scope="scope">
+                        <el-button size="mini" @click="openChat">发起聊天</el-button>
+                        <el-button size="mini" @click="editDialogVisible = true">群组编辑
+                        </el-button>
+                        <el-button size="mini" @click="openGroupMembers(scope.row.ID)">群组成员
+                        </el-button>
+                        <el-button size="mini" @click="openAnnouncement(scope.row.IsAdmin,scope.row.ID)">群组公告
+                        </el-button>
+                        <el-button size="mini" @click="exitGroupAll" v-if="scope.row.IsAdmin">解散群组</el-button>
+
+                        <el-button size="mini" @click="exitGroup" v-if="!scope.row.IsAdmin">退出群组</el-button>
+
+                     </template>
+                  </el-table-column>
+               </el-table>
+            </div>
+            <el-pagination background layout="prev, pager, next" :total="1000">
+            </el-pagination>
+         </el-main>
+
+
+         <!-- 群组成员弹窗 -->
+         <el-dialog visible width="750px" title="群组成员" v-bind:visible.sync="memberDialogVisible" v-cloak>
+
+            <div class="el-row">
+               <div class="el-col el-col-6" v-for="(item, index) in groupMembers">
+                  <div class="posr" v-bind:data-uid="item.uid" v-on:dblclick="openChat">
+                     <img v-bind:src="item.photo" class="head-simg vam mr10">
+                     <span class="color-6 name-list" v-text="item.realName"></span>
+                     <i class="fa fa-user-circle group-admin" v-if="item.isAdmin"></i>
+                  </div>
+               </div>
+
+            </div>
+            <span slot="footer" class="dialog-footer">
+               <el-button type="primary" v-on:click="">确 定</el-button>
+               <el-button v-on:click="memberDialogVisible = false">取 消</el-button>
+            </span>
+         </el-dialog>
+
+
+         <!-- 群组公告弹窗 -->
+         <el-dialog visible width="750px" title="群组公告" v-bind:visible.sync="announcementDialogVisible" v-cloak>
+            <div class="el-row" style="height:600px;">
+
+               <el-scrollbar class="vr-con-announcement">
+                  <el-button type="primary" icon="el-icon-plus" @click="createAnnouncementDialogVisible=true"
+                     v-if="canCreateAnnouncement">新建公告</el-button>
+
+                  <div v-if="groupAnnouncement.length == 0" class="announcement-empty">
+                     暂无相关公告
+                  </div>
+                  <div v-for="(item, index) in groupAnnouncement" class="div-announcement">
+                     <h2 v-text="item.title"></h2>
+                     <p class="announcement-content" v-text="item.content"></p>
+
+                     <div class="announcement-bottom-button" v-if="canCreateAnnouncement">
+                        <el-button size="mini" @click="editGroupAnnouncement(item)">编辑</el-button>
+                        <el-button size="mini" @click="deleteGroupAnnouncement(item.id)">删除</el-button>
+                        <p class="announcement-bottom" v-text="item.creatorname+' 发表于 '+item.datetime"></p>
+                     </div>
+                     <div style="clear: both;"></div>
+                  </div>
+               </el-scrollbar>
+            </div>
+         </el-dialog>
+
+
+         <!-- 新建群组公告弹窗 -->
+         <el-dialog visible width="750px" title="新建公告" v-bind:visible.sync="createAnnouncementDialogVisible" v-cloak>
+            <el-form v-bind:model="form_announcement" label-width="80px" v-bind:rules="rule_announcement"
+               ref="form_announcement_create">
+               <el-form-item label="公告标题" prop="title">
+                  <el-input v-model.trim="form_announcement.title"></el-input>
+               </el-form-item>
+               <el-form-item label="活动内容" prop="content">
+                  <el-input type="textarea" class="a-height" v-model.trim="form_announcement.content"></el-input>
+               </el-form-item>
+               <el-form-item>
+                  <el-button type="primary" @click="createGroupAnnouncement">立即创建</el-button>
+                  <el-button @click="createAnnouncementDialogVisible=false">取消</el-button>
+               </el-form-item>
+            </el-form>
+         </el-dialog>
+
+
+         <!-- 编辑群组公告弹窗 -->
+         <el-dialog visible width="750px" title="编辑公告" v-bind:visible.sync="editAnnouncementDialogVisible" v-cloak>
+            <el-form v-bind:model="currentAnnouncement" label-width="80px" v-bind:rules="rule_announcement"
+               ref="form_announcement_edit">
+               <el-form-item label="公告标题" prop="title">
+                  <el-input v-model.trim="currentAnnouncement.title"></el-input>
+               </el-form-item>
+               <el-form-item label="活动内容" prop="content">
+                  <el-input type="textarea" class="a-height" v-model.trim="currentAnnouncement.content"></el-input>
+               </el-form-item>
+               <el-form-item>
+                  <el-button type="primary" @click="editGroupAnnouncementSubmit">确定</el-button>
+                  <el-button @click="editAnnouncementDialogVisible=false">取消</el-button>
+               </el-form-item>
+            </el-form>
+         </el-dialog>
+      </el-container>
+   </div>
+   <script src=https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js> </script> <!-- 引入vue组件库 -->
+   <script src="js/vue.js"></script>
+   <script src="js/index.js"></script>
+   <script src="js/check-members.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+
+   <script src="js/vue-infinite-loading.js"></script>
+
+
+   <script>
+
+      Vue.http.options.root = 'http://okcs.test.cnki.net';
+      Vue.http.headers.common['ignore-identity'] = "true";
+
+      new Vue({
+         el: '#app',
+         components: {
+            CheckMembers: CheckMembers
+         },
+         data: function () {
+            return {
+               editAnnouncementDialogVisible: false,//创建群组弹窗
+               createAnnouncementDialogVisible: false,//编辑群组弹窗
+               memberDialogVisible: false,//群组成员弹窗
+               announcementDialogVisible: false,//公告管理弹窗
+
+               tableData: [],//当前群组页面的群组数据
+               pageNo: 1,//分页的时候，页码
+               pageSize: 10,//页码大小
+               groupAnnouncement: [],//当前选中群组，群公告消息
+               canCreateAnnouncement: false,//公告页面中，是否可以创建群组公告
+               groupMembers: [],//当前群组成员
+               isAdmin: false,//是否是当前群组管理员
+               uid: '',//当前用户id
+               userRealName: '',//当前用户真实姓名
+
+               currentGroupid: '',//当前选中群组id
+
+               form_announcement: { title: '', content: '' },//新建公告的model
+               currentAnnouncement: [],//编辑公告的model
+
+               rule_announcement: {
+                  title: [
+                     { required: true, message: '请输入公告标题', trigger: 'blur' },
+                     { min: 1, max: 25, message: '长度在 1 到 25 个字符', trigger: 'blur' }
+                  ],
+                  content: [
+                     { required: true, message: '请输入公告内容', trigger: 'change' },
+                     { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+                  ],
+               }
+            }
+         },
+         created: function () {
+            var self = this;
+            self.initialData();
+         },
+         computed: {
+            disabledList: function () {
+               return [];
+            }
+         },
+
+         methods: {
+
+            //初始化数据
+            initialData: function (groupid) {
+               var self = this;
+               this.$http.get('imwebapi/api/GroupApi/GetSelfGroups?userId=' + self.uid + 'pageNo=' + self.pageNo + 'pageSize=' + self.pageSize, { emulateJson: true }).then(function (res) {
+                  if (res.data.Success) {
+                     self.tableData = res.data.Content;
+                  } else {
+                     this.$message.error('GetSelfGroups请求失败！');
+
+                  }
+               },
+                  function () {
+                     this.$message.error('GetSelfGroups请求失败！error');
+                     self.tableData = [{ "ID": "80", "Name": "AACC11122", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d80", "Des": "AACC11122", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/07/15 10:29:33", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "79", "Name": "AAAC1122", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d79", "Des": "AAAC1122", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/07/15 10:26:55", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "78", "Name": "AA11", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d78", "Des": "AA11", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/07/12 17:12:42", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "77", "Name": "AA12", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d77", "Des": "AA12", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/07/12 16:51:27", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "76", "Name": "A12", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d76", "Des": "A12", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/07/12 16:33:36", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "75", "Name": "新建群组K12", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d75", "Des": "新建群组K12", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/06/28 08:52:01", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "74", "Name": "KKK", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d74", "Des": "111", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/06/28 08:17:17", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "73", "Name": "aaK13", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d73", "Des": "aaK13", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/06/28 08:07:10", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "72", "Name": "测试2", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d72", "Des": "测试2", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/06/14 16:35:40", "UnreadMsgCount": 0, "IsAdmin": true }, { "ID": "71", "Name": "aaaaa", "Photo": "http%3a%2f%2fokcs.test.cnki.net%2fimwebapi%2fHome%2fPic%3fid%3d71", "Des": "aaaaaaaaa", "Creator": "c689a66a-92be-4fc1-95b2-7d3c5093ca9c", "CreateDate": "2019/06/14 16:07:09", "UnreadMsgCount": 0, "IsAdmin": true }];
+                  });
+            },
+
+            //新建群组
+            createGroup: function () {
+
+            },
+
+            //管理群组
+            editGroup: function (groupid) {
+
+            },
+
+            //查看群组成员
+            openGroupMembers: function (groupid) {
+               var self = this;
+               self.memberDialogVisible = true;
+               this.$http.get('imwebapi/api/GroupApi/GetSelfGroupMember?userId=' + self.uid + 'groupId=' + groupid, { emulateJson: true }).then(function (res) {
+                  if (res.data.Success) {
+                     tableData = res.data.Content;
+                  } else {
+                     this.$message.error('GetSelfGroupMember请求失败！');
+
+                  }
+               },
+                  function () {
+                     this.$message.error('GetSelfGroupMember请求失败！error');
+                     self.groupMembers = [
+                        {
+                           "uid": "300",
+                           "realName": "于江虎",
+                           "photo": "http://oaokcs.cnki.net/sso/pic/972597c1-b957-450c-9f2b-c44257bf4fdc?type=1",
+                           "isAdmin": true,
+                        },
+                        {
+                           "uid": "3020",
+                           "realName": "申志云",
+                           "photo": "http://oaokcs.cnki.net/sso/pic/4ab0ab13-387d-44fc-8fd8-da6cadbd4be1?type=1",
+                           "isAdmin": false,
+                        }, {
+                           "uid": "301",
+                           "realName": "刘静杰",
+                           "photo": "http://oaokcs.cnki.net/sso/pic/689b7df5-9b54-4b61-a028-07e65b667e4d?type=1",
+                           "isAdmin": false,
+                        },
+                     ];
+                  });
+            },
+
+            //创建公告
+            createGroupAnnouncement: function (groupid) {
+
+               this.$refs['form_announcement_create'].validate((valid) => {
+                  if (valid) {
+                     var self = this;
+                     var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+                     formData.append('uid', this.uid);
+                     formData.append('groupid', groupid);
+                     formData.append('title', this.form_announcement.title);
+                     formData.append('content', this.form_announcement.content);
+                     formData.append('creatorname', this.userRealName);
+                     this.$http.post('imwebapi/api/GroupApi/CreateGroupAnnouncement', formData, { emulateJson: true }).then(
+                        result => {
+                           if (result.data.Success) {
+                              self.groupAnnouncement.unshift(result.data.Content);
+                           } else {
+                              this.$message.error('创建公告失败！');
+                              console.log(result.data.Error);
+                           }
+                        },
+                        function () {
+                           self.$message.error('CreateGroupAnnouncement失败！');
+                        });
+                     self.form_announcement.title = "";
+                     self.form_announcement.content = "";
+                     self.createAnnouncementDialogVisible = false;
+                  } else {
+                     console.log('表单验证未通过');
+                     return false;
+                  }
+               });
+
+            },
+
+
+            //查看群组成员
+            openAnnouncement: function (b, groupid) {
+               var self = this;
+               self.announcementDialogVisible = true;
+               self.canCreateAnnouncement = b;
+               self.currentGroupid = groupid;
+               this.$http.get('imwebapi/api/GroupApi/GetGroupAnnouncement?userId=' + self.uid + 'groupId=' + groupid, { emulateJson: true }).then(function (res) {
+                  if (res.data.Success) {
+                     tableData = res.data.Content;
+                  } else {
+                     this.$message.error('GetGroupAnnouncement请求失败！');
+
+                  }
+               },
+                  function () {
+                     this.$message.error('GetGroupAnnouncement请求失败！error');
+                     self.groupAnnouncement = [
+                        {
+                           "id": "300",
+                           "groupid": "aaa",
+                           "datetime": "2019-10-14 16:11:15",
+                           "remark": "",
+                           "creator": "972597c1-b957-450c-9f2b-c44257bf4fdc",
+                           "title": "公告1",
+                           "creatorname": "刘静杰",
+                           "content": "这是群组公告aaaaaa这是群组公告aaaaaa这是群组公告aaaaaa这是群组公告aaaaaa这是群组公告aaaaaa这是群组公告aaaaaa这是群组公告aaaaaa",
+                        },
+                        {
+                           "id": "300",
+                           "groupid": "aaa",
+                           "datetime": "2019-10-14 16:11:15",
+                           "remark": "",
+                           "creator": "972597c1-b957-450c-9f2b-c44257bf4fdc",
+                           "title": "公告2",
+                           "creatorname": "刘静杰",
+                           "content": "通常text-indent缩进属性将对段落首行开头文本文字进行缩进显示。如果使用html br换行标签，第二个换行开始也不会出现缩进效果。如果使用了html P段落标签段落换行，将会出现每个p段落换行开头都将缩进，这里我们给大家通过案例演示给大家，希望通过DIVCSS5案例掌握CSS text-indent缩进样式。",
+                        },
+                        {
+                           "id": "300",
+                           "groupid": "aaa",
+                           "datetime": "2019-10-14 16:11:15",
+                           "remark": "",
+                           "creator": "972597c1-b957-450c-9f2b-c44257bf4fdc",
+                           "title": "公告3",
+                           "creatorname": "刘静杰",
+                           "content": "ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。",
+                        },
+                        {
+                           "id": "300",
+                           "groupid": "aaa",
+                           "datetime": "2019-10-14 16:11:15",
+                           "remark": "",
+                           "creator": "972597c1-b957-450c-9f2b-c44257bf4fdc",
+                           "title": "公告4",
+                           "creatorname": "刘静杰",
+                           "content": "ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。ASP.NET SignalR 是为 ASP.NET 开发人员提供的一个库，可以简化开发人员将实时 Web 功能添加到应用程序的过程。实时 Web 功能是指这样一种功能：当所连接的客户端变得可用时服务器代码可以立即向其推送内容，而不是让服务器等待客户端请求新的数据。",
+                        },
+                     ];
+                  });
+            },
+
+            //退出群组
+            exitGroup: function (groupid) {
+               var self = this;
+               this.$confirm('确认退出该群组?', '提示', {
+                  cancelButtonText: '取消',
+                  confirmButtonText: '确定',
+                  type: 'warning'
+               }).then(() => {
+                  var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+                  formData.append('uid', this.uid);
+                  formData.append('groupid', groupid);
+                  this.$http.post('imwebapi/api/GroupApi/ExitGroup', formData, { emulateJson: true }).then(
+                     result => {
+                        if (result.data.Success) {
+                           this.$message({
+                              type: 'success',
+                              message: '退出成功!'
+                           });
+                        } else {
+                           this.$message.error('操作失败！');
+                           console.log(result.data.Error);
+                        }
+                     },
+                     function () {
+                        self.$message.error('ExitGroup失败！');
+                     });
+               }).catch(() => {
+               });
+            },
+
+            //解散群组
+            exitGroupAll: function (groupid) {
+               var self = this;
+               this.$confirm('确认解散该群组?', '提示', {
+                  cancelButtonText: '取消',
+                  confirmButtonText: '确定',
+                  type: 'warning'
+               }).then(() => {
+                  var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+                  formData.append('uid', this.uid);
+                  formData.append('groupid', groupid);
+                  this.$http.post('imwebapi/api/GroupApi/ExitGroup', formData, { emulateJson: true }).then(
+                     result => {
+                        if (result.data.Success) {
+                           this.$message({
+                              type: 'success',
+                              message: '解散成功!'
+                           });
+                        } else {
+                           this.$message.error('操作失败！');
+                           console.log(result.data.Error);
+                        }
+                     },
+                     function () {
+                        self.$message.error('ExitGroup失败！');
+                     });
+
+               }).catch(() => {
+               });
+            },
+
+
+
+            //打开聊天窗口
+            openChat: function () {
+               this.$message.info('打开聊天窗口！');
+            },
+            //编辑公告打开窗口
+            editGroupAnnouncement: function (model) {
+               this.currentAnnouncement = model
+               this.editAnnouncementDialogVisible = true;
+            },
+
+            //编辑公告
+            editGroupAnnouncementSubmit: function () {
+
+               this.$refs['form_announcement_edit'].validate((valid) => {
+                  if (valid) {
+                     var self = this;
+                     var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+                     formData.append('uid', this.uid);
+                     formData.append('aid', this.currentAnnouncement.id);
+                     formData.append('title', this.currentAnnouncement.title);
+                     formData.append('content', this.currentAnnouncement.content);
+                     this.$http.post('imwebapi/api/GroupApi/EditGroupAnnouncement', formData, { emulateJson: true }).then(
+                        result => {
+                           if (result.data.Success) {
+                              self.openAnnouncement(self.canCreateAnnouncement, self.currentGroupid);
+                           } else {
+                              self.$message.error('编辑公告失败！');
+                              console.log(result.data.Error);
+                           }
+                        },
+                        function () {
+                           self.$message.error('EditGroupAnnouncement失败！');
+                        });
+                     this.editAnnouncementDialogVisible = false;
+                     this.currentAnnouncement = [];
+                  } else {
+                     console.log('表单验证未通过!');
+                     return false;
+                  }
+               });
+
+
+            },
+            //删除公告
+            deleteGroupAnnouncement: function (aid) {
+               var self = this;
+               this.$confirm('确认删除该公告?', '提示', {
+                  cancelButtonText: '取消',
+                  confirmButtonText: '确定',
+                  type: 'warning'
+               }).then(() => {
+                  var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+                  formData.append('uid', this.uid);
+                  formData.append('aid', aid);
+                  var self = this;
+                  this.$http.post('imwebapi/api/GroupApi/DeleteGroupAnnouncement', formData, { emulateJson: true }).then(
+                     result => {
+                        if (result.data.Success) {
+                           self.$message({
+                              type: 'success',
+                              message: '删除公告成功!'
+                           });
+                        } else {
+                           self.$message.error('删除公告失败！');
+                           console.log(result.data.Error);
+                        }
+                     },
+                     function () {
+                        self.$message.error('DeleteGroupAnnouncement失败！');
+                     });
+               }).catch(() => {
+               });
+            },
+
+
+
+
+
+         },
+      })
+   </script>
+
+
+</body>
+
+</html>

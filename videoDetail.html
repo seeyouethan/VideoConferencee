@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>直播详情页</title>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="css/Element-UI/index.css">  
+  <link rel="stylesheet" type="text/css" href="css/iconfont.css">
+  <link rel="stylesheet" type="text/css" href="css/swiper.min.css">
+  <link rel="stylesheet" type="text/css" href="css/style.css"> 
+</head>
+<body>
+<div id="app">
+  <el-container>
+     <!-- 顶部 -->
+     <el-header class="vd-top">
+         <div class="vt-l inlie-vam">
+             <h1 class="vt-tit">直播测试标题内容选题参加比赛</h1>
+             <p class="vt-txt"><span class="mr20">刘丽丽</span><span>2019/05/04 10:00--2019/06/04 11:15</span></p>
+             <p class="vt-txt">描述：多人协作共同完成调研 报告、技术文档、成果报告等 在线撰写，支持文档、PPT、 电子表格及思维导图多人协作共同完成调研成果报告等 在线撰写，支持文档、PPT、 电子表格及思维导图多人协作共同完成调研</p>
+         </div>
+         <div class="vt-r inlie-vam">
+             <el-button type="primary" class="btn btn-blue mr30">主讲录像下载</el-button>
+             <el-button type="primary" class="btn btn-gray mr10">录像剪辑上传</el-button>
+             <a href="javascript:;">如何剪辑？</a>
+         </div>
+     </el-header>
+     <!-- 主体内容 -->
+     <el-main>
+        <el-row class="main-top">
+            <!-- 左侧 -->
+            <el-col :span="18">
+               <div class="video-panel"> 
+                  <img src="images/videoB.jpg" width="1075" height="660" />
+                  <div class="vp-s">
+                     <img src="images/videoS.jpg" />
+                  </div>
+               </div>
+               <!-- 轮播图 -->
+               <div class="swiper-container">
+                      <div class="swiper-wrapper">
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                            <div class="swiper-slide"><img src="images/videoM.jpg"><span>明星</span></div>
+                     </div>
+                     <!-- 导航按钮 -->
+                     <div class="swiper-button-prev"><i class="iconfont icon-rightJian"></i></div>
+                     <div class="swiper-button-next"><i class="iconfont icon-rightJ"></i></div>
+               </div> 
+            </el-col>
+            <!--右侧 讨论/人员/流量统计 -->
+            <el-col :span="6" class="mt-r">
+               <el-tabs v-model="activeName">
+                <!-- 讨论 -->
+                <el-tab-pane name="first">
+                    <span slot="label">讨论<i>(123)</i></span>
+                    <ul>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                      <li class="mtr-item">
+                         <img src="images/headImg.jpg" class="head-img inlie-vam" />
+                         <div class="mtri-r inlie-vam">
+                            <p class="clearfix">
+                              <span class="float-l mem-width font-s16">李海鹰</span>
+                              <span class="float-r fs12-c9">2019/02/05 10:23</span>
+                            </p>
+                            <p class="fs12-c9 text-ellipsis mt05">学习的内容你同方知网数字出版技术...</p>
+                         </div>
+                      </li>
+                    </ul>
+                </el-tab-pane>
+                <!-- 人员 -->
+                <el-tab-pane  name="second">
+                    <span slot="label">人员<i>(123)</i></span>
+                    <ul>
+                      <li class="mtr-items"><img src="images/headImg.jpg" class="head-img mr10" /><span class="mem-width">李海鹰</span></li>
+                      <li class="mtr-items"><img src="images/headImg.jpg" class="head-img mr10" /><span class="mem-width">李海鹰</span></li>
+                      <li class="mtr-items"><img src="images/headImg.jpg" class="head-img mr10" /><span class="mem-width">李海鹰</span></li>
+                      <li class="mtr-items"><img src="images/headImg.jpg" class="head-img mr10" /><span class="mem-width">李海鹰</span></li>
+                    </ul>
+                </el-tab-pane>
+                <!-- 流量统计 -->
+                <el-tab-pane name="third">
+                    <span slot="label">流量统计</span>
+                    <div class="mtr-cont">
+                       <p>观看次数：2000次</p>
+                       <p>直播总时长：2000分钟</p>
+                       <p>峰值播放人数：1000次</p>
+                       <p>累计播放请求数：666672</p>
+                       <p>峰值带宽：1.27G*8---1366729427 Bps</p>
+                       <p>总下行流量：4149.21G---445175956160 Byte</p>
+                    </div>
+                </el-tab-pane>
+              </el-tabs>
+            </el-col>
+        </el-row>
+        <!-- 图表等 -->
+        <div class="main-mid">
+           <el-tabs v-model="activeNamet">
+                <!-- 图表 -->
+                <el-tab-pane name="firstt" label="图表">
+                    <el-row>
+                       <el-col :span="24">
+                         <div class="chart-con">
+                           <h2 class="h2-top">访问次数(按天统计)</h2>
+                           <img src="images/charts01.jpg" />
+                         </div>
+                       </el-col>
+                    </el-row>
+                    <el-row :gutter="40">
+                        <el-col :span="12">
+                         <div class="chart-con">
+                            <h2 class="h2-top">访问次数（按小时统计）</h2>
+                            <img src="images/charts02.jpg" />
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                          <div class="chart-con">
+                           <h2 class="h2-top">访问时长（按分钟统计）</h2>
+                           <img src="images/charts02.jpg" />
+                          </div>
+                        </el-col>
+                    </el-row>
+                    <el-row>
+                       <el-col :span="24">
+                         <div class="chart-con">
+                           <h2 class="h2-top">访问次数(按天统计)</h2>
+                           <img src="images/charts03.jpg" />
+                          </div>
+                       </el-col>
+                    </el-row>
+                    <el-row :gutter="40">
+                        <el-col :span="12">
+                          <div class="chart-con">
+                            <h2 class="h2-top">区域统计</h2>
+                            <img src="images/charts04.jpg" />
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                           <div class="chart-con">
+                             <h2 class="h2-top">终端统计</h2>
+                             <img src="images/charts05.jpg" />
+                           </div>
+                        </el-col>
+                    </el-row>
+                </el-tab-pane>
+                <!-- 访问明细 -->
+                <el-tab-pane name="secondt" label="访问明细">
+                    <el-table :data=[1,2,3,4,5,6,7,8] class="table-detail" border>
+                      <el-table-column label="IP地址"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="用户ID"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="真实姓名"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="连接时间"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="离开时间"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="SessionID"><span slot-scope="scope">1</span></el-table-column>
+                      <el-table-column label="所在地区"><span slot-scope="scope">1</span></el-table-column>
+                    </el-table>
+                </el-tab-pane>
+           </el-tabs>
+        </div>
+     </el-main>
+  </el-container>
+</div>
+  <script src="js/vue.js"></script>
+  <!-- 引入组件库 -->
+  <script src="js/index.js"></script>
+  <script type="text/javascript" src="js/swiper.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return { visible: false,
+                 activeName:'first',
+                 activeNamet:'firstt'
+         }
+      }
+    })
+  </script>
+  <script>        
+      var mySwiper = new Swiper ('.swiper-container', {
+        // direction: 'vertical', // 垂直切换选项
+        // loop: true, // 循环模式选项
+        // 如果需要前进后退按钮
+        centeredSlides : false,
+         centerInsufficientSlides: true,
+        // loop: true,
+        slidesPerView: 'auto',
+        // slidesPerGroup : 5,
+        spaceBetween : 20,
+        // loopedSlides: 4,
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+      })        
+  </script>
+</body>
+</html>

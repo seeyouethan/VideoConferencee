@@ -1,0 +1,892 @@
+﻿@model DiscussionMeet
+
+@{
+    Layout = null;
+
+    ViewBag.Title = "会议详情";
+    var disList = ViewBag.discussList as IEnumerable<Edu.Models.LiveDiscuss>;
+    var userList = ViewBag.MeetUserList as List<UserInfo>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>直播会议</title>
+    <!-- 引入样式 -->
+
+    <link href="~/Content/Discussion/css/Element-UI/index.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="~/Content/Discussion/css/iconfont.css">
+    <script src="~/Content/Discussion/fonts/iconfont.js"></script>
+    <link rel="stylesheet" type="text/css" href="~/Content/Rtc/css/style.css">
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+
+    <script src="~/Content/Discussion/js/vue.js"></script>
+    <!-- 引入组件库 -->
+    <script src="~/Content/Discussion/js/index.js"></script>
+
+
+
+    <script src="~/Content/Rtc/js/RTCMultiConnection.min.js"></script>
+    <script src="~/Content/Rtc/node_modules/webrtc-adapter/out/adapter.js"></script>
+    <script src="~/Content/Rtc/js/socket.io.js"></script>
+    <!-- custom layout for HTML5 audio/video elements -->
+
+    <link href="~/Content/Rtc/Css/getHTMLMediaElement.css" rel="stylesheet" />
+    <script src="~/Content/Rtc/js/getHTMLMediaElement.js"></script>
+    <!-- capture screen from any HTTPs domain! -->
+    <script src="~/Content/Rtc/node_modules/webrtc-screen-capturing/getScreenId.js"></script>
+
+    <script src="~/Tookit/layer/layer.js"></script>
+
+    <script src="~/Content/Rtc/node_modules/recordrtc/RecordRTC.js"></script>
+
+</head>
+<body>
+    <div id="app">
+        <el-container>
+            <!-- 顶部 -->
+            <el-header class="vh-top">
+                <el-row :gutter="20">
+                    <el-col :span="11"><h1>@Model.Title</h1></el-col>
+                    <el-col :span="2" class="vht-m">
+                        <span>主持人：@(ViewBag.hostTrueName)</span>
+                        <span style="width:150px;">2019-09-13  15:20:20</span>
+                    </el-col>
+                    <el-col :span="11" class="vht-r">
+                        <a class="iconfont icon-set bg-icon mr20"></a>@*设置*@
+                        <a class="iconfont icon-tag bg-icon mr20"></a>@*切换模式*@
+                        <a class="iconfont icon-yq bg-icon mr20"></a>
+                        <el-popover placement="bottom" width="200" trigger="click">
+                            <span slot="reference" class="cp">
+                                <img src="@(string.IsNullOrEmpty(Edu.Service.LoginUserService.User.Photo) ? "/Content/images/NoPhoto.png" :Edu.Service.LoginUserService.User.Photo)" alt="@(Edu.Service.LoginUserService.User.UserName)" class="head-simg" />
+                                <span class="mem-width">@(Edu.Service.LoginUserService.User.TrueName?? Edu.Service.LoginUserService.User.UserName)</span>
+                                <i class="el-icon-caret-bottom"></i>
+                            </span>
+                            <ul>
+                                <li><a href="@Url.Action("logout","Account",new { area=""})" class="">退出</a></li>
+                            </ul>
+                        </el-popover>
+                    </el-col>
+                </el-row>
+            </el-header>
+            <!-- 主体内容 -->
+            <el-main class="v-main">
+                <!-- 右侧-讨论区 -->
+                <div class="video-r">
+                    <!-- 点击此按钮可以收起右侧 点击时给div加类名r0-->
+                    <span class="iconfont icon-rightJ"></span>
+                    <el-tabs v-model="activeName">
+                        <el-tab-pane label="讨论区" name="first">
+                            <!-- 讨论区内容 -->
+                            <el-scrollbar class="vr-con clearfix">
+                                <div id="discussDiv">
+                                    @if (disList != null && disList.Count() > 0)
+                                    {
+                                        foreach (var dis in disList)
+                                        {
+                                            <div class="vrc-item">
+                                                <p class="clearfix lihe30">
+                                                    <span class="float-l"><img src="@(dis.Photo)" class="head-simg mr10" /><span class="mem-width color-9">@(dis.TrueName)</span></span>
+                                                    <span class="float-r color-9">@(dis.CreateDate)</span>
+                                                </p>
+                                                <p class="vrci-txt">
+                                                    @(dis.Contents)
+                                                </p>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </el-scrollbar>
+                            <div class="vr-bot">
+                                <el-popover placement="top" trigger="click" popper-class="pop-text">
+                                    <el-button slot="reference" class="btn-blue" id="BtnMessage" type="primary">发表意见</el-button>
+                                    <el-input type="textarea" id="text_content"></el-input>
+                                </el-popover>
+                            </div>
+                        </el-tab-pane>
+                        <el-tab-pane label="文档讨论" name="second">
+                            <el-scrollbar class="vrt-con clearfix">
+                              <ul>
+                                <li class="vrtc-item">
+                                    <a class="vrtci-l" href="javascript:;">
+                                        <svg class="icon icon-s vam" aria-hidden="true">
+                                            <use xlink:href="#icon-word-s"></use>
+                                        </svg>
+                                        <span>质保研讨文档你想下载吗请下载</span>
+                                    </a>
+                                    <span class="vrtci-r">
+                                        <a href="javascript:;">下载</a>
+                                        <a href="javascript:;">研讨</a>
+                                    </span>
+                                </li>
+                                  <li class="vrtc-item">
+                                      <a class="vrtci-l" href="javascript:;">
+                                          <svg class="icon icon-s vam" aria-hidden="true">
+                                              <use xlink:href="#icon-word-s"></use>
+                                          </svg>
+                                          <span>质保研讨文档你想下载吗请下载</span>
+                                      </a>
+                                      <span class="vrtci-r">
+                                          <a href="javascript:;">下载</a>
+                                          <a href="javascript:;">研讨</a>
+                                      </span>
+                                  </li>
+                            </ul>
+                            </el-scrollbar>
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
+                <!-- 左侧-参与人 -->
+                <div class="video-l">
+                    <!-- 点击此按钮可以收起右侧 点击时给div加类名l0-->
+                    <span class="iconfont icon-rightJian"></span>
+                    <div class="vl-top clearfix">
+                        <p class="float-l font-s18"><i class="iconfont icon-cy"></i>参与人<i class="color-6 font-s16"><a id="userOnline">@(ViewBag.userCount)</a></i></p>
+                        @if (ViewBag.host != 1)
+                        {
+                            <el-button type="primary" id="btnApply" class="float-r btn-blue btn-s">申请发言</el-button>
+                        }
+                        else
+                        {
+                            <el-button type="primary" id="btnScreen" class="float-r btn-blue btn-s">分享桌面</el-button>
+
+                            if (ViewBag.IsRecord == 1)
+                            {
+                                <el-button type="primary" id="btnStop" class="float-r btn-blue btn-s mr10">结束录制</el-button>
+                            }
+                        }
+
+                    </div>
+                    <el-scrollbar class="vl-con clearfix">
+                        <div>
+                            @*<div id="12312" class="vlc-item">
+                                <img src="~/Content/Discussion/images/videoImgB.jpg" />
+                                <span class="i-name">@ViewBag.hostTrueName</span>
+                                <span class="i-zc">主持人</span>
+                            </div>*@
+                            @if (userList != null && userList.Count() > 0)
+                            {
+                                foreach (var ul in userList)
+                                {
+                                    <div id="user@(ul.ID)" class="vlc-item">
+                                        <img src="@(String.IsNullOrEmpty(ul.Photo)?"/Content/Images/NoPhoto.png":ul.Photo)" alt="@ul.TrueName" />
+                                        <span class="i-name">@(ul.TrueName)</span>
+                                        <span class="i-zc"></span>
+                                    </div>
+                                }
+                            }
+
+                        </div>
+                    </el-scrollbar>
+                </div>
+                @*第一种*@
+                <div class="video-con">
+                    <div class="vc-top">
+                        <div class="vct-top" id="videos-container">
+                            @*<div class="vctt-r">
+                                <i class="iconfont icon-sxt"></i>
+                                <i class="iconfont icon-yy"></i>
+                                <i class="iconfont icon-pm"></i>
+                                <i class="iconfont icon-fullScreen"></i>
+                            </div>*@
+                       </div>
+                        <div class="vct-bot" id="videos-viwer">
+                            @*<div class="vctb-item">
+                                <img src="~/Content/Discussion/images/videoImg.jpg" />
+                                <i class="iconfont icon-close"></i>
+                                <span class="i-name">阿飞</span>
+                                <div class="vctt-r">
+                                    <i class="iconfont icon-sxt"></i>
+                                    <i class="iconfont icon-yy"></i>
+                                    <i class="iconfont icon-pm"></i>
+                                    <i class="iconfont icon-fullScreen"></i>
+                                </div>
+                            </div>*@
+                        </div>
+                    </div>
+                </div>
+                @*第二种*@
+                <div class="video-con video-conT hide">
+                    <el-row class="vc-top" :gutter="30">
+                        <el-col class="vctt-item posr" :span="12">
+                            <img src="~/Content/Discussion/images/videoB.jpg" />
+                            <span class="i-name">阿飞</span>
+                            <div class="vctt-r">
+                                <i class="iconfont icon-sxt"></i>@*icon-sxtG*@
+                                <i class="iconfont icon-yy"></i>@*icon-yyG*@
+                                <i class="iconfont icon-pm"></i>
+                                <i class="iconfont icon-fullScreen"></i>
+                            </div>
+                        </el-col>
+                        <el-col class="vctt-item posr" :span="12">
+                            <img src="~/Content/Discussion/images/videoB.jpg" />
+                            <span class="i-name">阿飞</span>
+                            <div class="vctt-r">
+                                <i class="iconfont icon-sxt"></i>@*icon-sxtG*@
+                                <i class="iconfont icon-yy"></i>@*icon-yyG*@
+                                <i class="iconfont icon-pm"></i>
+                                <i class="iconfont icon-fullScreen"></i>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </div>
+            </el-main>
+        </el-container>
+    </div>
+    <div >
+        <video controls="" autoplay="" style="width:180px;height:180px;display:none" id="video-preview"></video>
+        <canvas id="canvass" width="320" height="240" style="display:none"  ></canvas>
+    </div>
+    <script>
+        new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    visible: false,
+                    activeName: 'first'
+                }
+            }
+        })
+    </script>
+    <script>
+        var RMCMediaTrack = {
+            cameraStream: null,
+            hostStreamID:'',
+            cameraTrack: null,
+            screen: null
+        };
+        // ......................................................
+        // ..................RTCMultiConnection Code.............
+        // ......................................................
+
+        var connection = new RTCMultiConnection();
+
+        // by default, socket.io server is assumed to be deployed on your own URL
+        connection.socketURL = 'https://cnki.385073012.cn:9001/';
+
+
+        connection.iceServers = [];
+
+        // second step, set STUN url
+        connection.iceServers.push({
+            urls: 'stun:www.385073012.cn:3478'
+        });
+
+        // last step, set TURN url (recommended)
+        connection.iceServers.push({
+            urls: 'turn:www.385073012.cn:3478',
+            credential: '123456',
+            username: 'cnki'
+        });
+
+
+        // comment-out below line if you do not have your own socket.io server
+        // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
+
+        connection.socketMessageEvent = 'sfu-p2p-demo';
+
+        connection.userid = '@(ViewBag.UserID)';
+
+       if (@(ViewBag.host)== 1) {
+            connection.session = {
+                audio: true,
+                video: { 
+                    frameRate: { ideal: 10, max: 15 } ,
+                    width:1920,
+                    height:1080
+                },
+                data: true,
+                //oneway: true
+            };
+        }
+       else {
+           connection.session = {
+                   audio: false,
+                   video: false,
+                   data: true
+               };
+        }
+        //connection.mediaConstraints = {
+        //    audio: true,
+        //    video: {
+        //        width: 1920,
+        //        height: 1080,
+        //        frameRate: 30,
+        //        aspectRatio: 1.77,
+        //        facingMode: 'user' // or "application"
+        //    }
+        //};
+
+        connection.sdpConstraints.mandatory = {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true
+        };
+
+        connection.onstream = function (event) {
+
+
+            var existing = document.getElementById(event.streamid);
+            if (existing && existing.parentNode) {
+                existing.parentNode.removeChild(existing);
+            }
+
+            event.mediaElement.removeAttribute('src');
+            event.mediaElement.removeAttribute('srcObject');
+            event.mediaElement.muted = true;
+            event.mediaElement.volume = 0;
+
+            var video = document.createElement('video');
+
+            try {
+                video.setAttributeNode(document.createAttribute('autoplay'));
+                video.setAttributeNode(document.createAttribute('playsinline'));
+            } catch (e) {
+                video.setAttribute('autoplay', true);
+                video.setAttribute('playsinline', true);
+            }
+
+            if (event.type === 'local') {
+                video.volume = 0;
+                try {
+                    video.setAttributeNode(document.createAttribute('muted'));
+                } catch (e) {
+                    video.setAttribute('muted', true);
+                }
+                if (event.stream.isVideo) {
+                    RMCMediaTrack.cameraStream = event.stream;
+                    RMCMediaTrack.cameraTrack = event.stream.getVideoTracks()[0];
+                }
+            }
+            video.srcObject = event.stream;
+            var mediaElement;
+
+
+
+            if (event.userid == '@(ViewBag.HostUserID)') {
+                if (@(ViewBag.host)== 1) {
+                    RMCMediaTrack.hostStreamID = event.streamid;
+                }
+
+                connection.videosContainer = document.getElementById('videos-container');
+                mediaElement = getMainElement(video, {
+
+                    buttons: ['full-screen'],
+                    showOnMouseEnter: false,
+                    width: 1000,
+                    height:500
+                });
+            }
+            else {
+                connection.videosContainer = document.getElementById('videos-viwer');
+                mediaElement = getHTMLMediaElement(video, {
+
+                    buttons: ['full-screen'],
+                    showOnMouseEnter: false
+                });
+            }
+
+
+            connection.videosContainer.appendChild(mediaElement);
+
+
+            setTimeout(function () {
+                mediaElement.media.play();
+            }, 5000);
+
+            mediaElement.id = event.streamid;
+            RMCMediaTrack.selfVideo = mediaElement.media;
+
+
+            //录制模块儿
+            if (@(ViewBag.IsRecord)==1) {
+
+                var recorder = connection.recorder;
+                if (!recorder) {
+                    recorder = RecordRTC([event.stream], {
+                        type: 'video'
+                    });
+                    recorder.startRecording();
+                    connection.recorder = recorder;
+                }
+                else {
+                    recorder.getInternalRecorder().addStreams([event.stream]);
+                }
+
+                if (!connection.recorder.streams) {
+                    connection.recorder.streams = [];
+                }
+
+                connection.recorder.streams.push(event.stream);
+            }
+
+            if (connection.isInitiator === true && event.type === 'remote') {
+                // master peer relays/forwards to other participants
+                connection.getAllParticipants().forEach(function (pid) {
+                    if (pid === event.userid) return; // ignore streamer
+
+                    var peer = connection.peers[pid].peer;
+                    peer.addStream(event.stream);
+                });
+
+                connection.renegotiate();
+            }
+
+
+        };
+
+        // Using getScreenId.js to capture screen from any domain
+        // You do NOT need to deploy Chrome Extension YOUR-Self!!
+        connection.getScreenConstraints = function (callback) {
+            if (DetectRTC.browser.name === 'Edge') {
+                callback('Edge requires navigator.getDisplayMedia.');
+                return;
+            }
+
+            getScreenConstraints(function (error, screen_constraints) {
+                if (!error) {
+                    screen_constraints = connection.modifyScreenConstraints(screen_constraints);
+                    callback(error, screen_constraints);
+                    return;
+                }
+                throw error;
+            });
+        };
+
+        connection.onstreamended = function (event) {
+            var mediaElement = document.getElementById(event.streamid);
+            if (mediaElement) {
+                mediaElement.parentNode.removeChild(mediaElement);
+
+                if (event.userid === connection.sessionid && !connection.isInitiator) {
+                    alert('Broadcast is ended. We will reload this page to clear the cache.');
+                    location.reload();
+                }
+            }
+        };
+
+        connection.onMediaError = function (e) {
+            if (e.message === 'Concurrent mic process limit.') {
+                if (DetectRTC.audioInputDevices.length <= 1) {
+                    alert('Please select external microphone. Check github issue number 483.');
+                    return;
+                }
+
+                var secondaryMic = DetectRTC.audioInputDevices[1].deviceId;
+                connection.mediaConstraints.audio = {
+                    deviceId: secondaryMic
+                };
+
+                connection.join(connection.sessionid);
+            }
+        };
+
+        connection.openOrJoin('@(Model.Stream)', function (isRoomExists, roomid) {
+
+               @*$.ajax({
+                                    type: "get",
+                   url: "@(Request.ApplicationPath.TrimEnd('/'))/MeetRtc/SetUserOnline?mid=@(ViewBag.mid)&UserName=@(ViewBag.TrueName)&userID=@(ViewBag.UserID)" ,
+                                    success: function (data, status) {
+
+                                    }
+            });*@
+        });
+        connection.onopen = function (event) {
+            var remoteUserId = event.userid;
+            var userLine = $("#userOnline").text();
+            var uLine = parseInt(userLine) + 1;
+            $("#userOnline").text(uLine);
+        };
+
+        connection.onleave = function (event) {
+            var remoteUserId = event.userid;
+            var userLine = $("#userOnline").text();
+            var uLine = parseInt(userLine) - 1;
+            if (uLine > 0) {
+                $("#userOnline").text(uLine);
+            }
+            if (@(ViewBag.host)== 1) {
+
+               @*$.ajax({
+                   type: "get",
+                   url: "@(Request.ApplicationPath.TrimEnd('/'))/MeetRtc/SetUserOffline?mid=@(ViewBag.mid)&UserName=@(ViewBag.TrueName)&userID=" + remoteUserId,
+                   success: function (data, status) {
+
+                                    }
+                      });*@
+            }
+        };
+
+        //结束 发言
+        connection.onstreamended = function (event) {
+            connection.removeStream(event.streamid);
+            var video = document.getElementById(event.streamid);
+            if (video && video.parentNode) {
+                video.parentNode.removeChild(video);
+            }
+        };
+
+        connection.onmessage = function (event) {
+            if (event.data.type == '1') { //消息类型1 申请发言
+                if (connection.userid == '@(ViewBag.HostUserID)') {
+                    layer.confirm(event.data.content.userName + '申请发言', {
+                        btn: ['同意', '拒绝'] //按钮
+                    },
+                        function (index) {
+
+                            layer.close(index);
+                            var mes = { type: '2', content: { userID: event.userid, status: '1', Message: '同意发言' } }
+                            connection.send(mes);
+                        },
+                        function (index) {
+
+                            layer.close(index);
+                            var mes = { type: '2', content: { userID: event.userid, status: '0', Message: '同意发言' } }
+                            connection.send(mes);
+                        });
+                }
+            }
+            else if (event.data.type == '2') {//同意或者拒绝发言
+
+
+                if (connection.userid == event.data.content.userID) {
+                    if (event.data.content.status == '1') {
+
+                        //$("#user").remove();
+
+                        connection.addStream({
+                            audio: true,
+                            video: true,
+                            data: true
+                        });
+
+                    }
+                    else {
+                        alert('支持人拒绝了您的发言请求')
+
+                    }
+                }
+            }
+            else if (event.data.type == '3') {
+                appenddiscuss(event.data.content.userName, event.data.content.photo, event.data.content.Message)
+            }
+            else if (event.data.type == '4') {//结束发言
+                connection.removeStream(event.data.content.streamid);
+            }
+            else if (event.data.type == '5') {//更换头像
+                var imag = $("#user" + event.data.content.userID).children('img');
+
+                imag.attr("src", event.data.content.ImageUrl)
+
+            }
+
+
+        };
+
+
+        function getScreenStream(callback) {
+            getScreenId(function (error, sourceId, screen_constraints) {
+                navigator.mediaDevices.getUserMedia(screen_constraints).then(function (screen) {
+                    RMCMediaTrack.screen = screen.getVideoTracks()[0];
+
+
+                    //RMCMediaTrack.selfVideo.srcObject = screen;
+
+                    // in case if onedned event does not fire
+                    (function looper() {
+                        // readyState can be "live" or "ended"
+                        if (RMCMediaTrack.screen.readyState === 'ended') {
+                            RMCMediaTrack.screen.onended();
+                            return;
+                        }
+                        setTimeout(looper, 1000);
+                    })();
+
+                    var firedOnce = false;
+                    RMCMediaTrack.screen.onended = RMCMediaTrack.screen.onmute = RMCMediaTrack.screen.oninactive = function () {
+                        if (firedOnce) return;
+                        firedOnce = true;
+
+                        if (RMCMediaTrack.cameraStream.getVideoTracks()[0].readyState) {
+                            RMCMediaTrack.cameraStream.getVideoTracks().forEach(function (track) {
+                                RMCMediaTrack.cameraStream.removeTrack(track);
+                            });
+                            RMCMediaTrack.cameraStream.addTrack(RMCMediaTrack.cameraTrack);
+                        }
+
+                        RMCMediaTrack.selfVideo.srcObject = RMCMediaTrack.cameraStream;
+
+                        connection.socket && connection.socket.emit(connection.socketCustomEvent, {
+                            justStoppedMyScreen: true,
+                            userid: connection.userid
+                        });
+
+                        // share camera again
+                        replaceTrack(RMCMediaTrack.cameraTrack);
+
+                        // now remove old screen from "attachStreams" array
+                        connection.attachStreams = [RMCMediaTrack.cameraStream];
+
+                        // so that user can share again
+                        btnShareScreen.disabled = false;
+                    };
+
+                    connection.socket && connection.socket.emit(connection.socketCustomEvent, {
+                        justSharedMyScreen: true,
+                        userid: connection.userid
+                    });
+
+                    callback(screen);
+                });
+            });
+        }
+
+
+        function replaceTrack(videoTrack) {
+            if (!videoTrack) return;
+            if (videoTrack.readyState === 'ended') {
+                alert('Can not replace an "ended" track. track.readyState: ' + videoTrack.readyState);
+                return;
+            }
+            connection.getAllParticipants().forEach(function (pid) {
+                var peer = connection.peers[pid].peer;
+                if (!peer.getSenders) return;
+
+                var trackToReplace = videoTrack;
+
+                peer.getSenders().forEach(function (sender) {
+                    if (!sender || !sender.track) return;
+
+                    if (sender.track.kind === 'video' && trackToReplace) {
+                        sender.replaceTrack(trackToReplace);
+                        trackToReplace = null;
+                    }
+                });
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+        $(function () {
+
+            //重新计算布局
+            $(".icon-rightJ").on("click", function () {
+
+                if ($(".video-r").hasClass('r0')) {
+                    $(".video-r").removeClass('r0');
+                }
+                else {
+                    $(".video-r").addClass('r0');
+                }
+            })
+            $(".icon-rightJian").on("click", function () {
+                if ($(".video-l").hasClass('l0')) {
+                    $(".video-l").removeClass('l0');
+                }
+                else {
+                    $(".video-l").addClass('l0');
+                }
+            })
+
+            //申请发言
+            $("#btnApply").on("click", function () {
+
+                if ($("#btnApply").text() == '申请发言') {
+                    var mes = { type: '1', content: { userName: '@(ViewBag.TrueName)', Message: '申请发言' } }
+                    connection.send(mes);
+                    $("#btnApply").text('结束发言')
+                }
+                else {
+
+
+                    connection.attachStreams.forEach(function (stream) {
+                        stream.stop();
+                    });
+
+                    var streamID;
+                    Object.keys(connection.streamEvents).forEach(function (streamid) {
+                    var event = connection.streamEvents[streamid];
+
+                        if (event.userid === '@(ViewBag.UserID)') {
+
+                            streamID = event.streamid;
+
+                        }
+                        var mes = { type: '4', content: { streamid: streamID } }
+                        connection.send(mes);
+                        //window.location.reload();
+                        $("#btnApply").text('申请发言')
+                });
+
+                }
+
+
+            })
+
+            var videoPreview = document.getElementById('video-preview');
+            navigator.mediaDevices.getUserMedia({
+                audio: false, video: {
+                    width: 320,
+                    height: 240,
+                }
+            }).then(function (participantStream) {
+                videoPreview.srcObject = participantStream;
+
+            });
+            if (@(ViewBag.host)!= 1) {
+                setInterval(ChangeImage, 3000)
+            }
+            //停止录制
+            $("#btnStop").on("click", function () {
+                var recorder = connection.recorder;
+                if (!recorder) return alert('No recorder found.');
+                recorder.stopRecording(function () {
+                    var blob = recorder.getBlob();
+                    invokeSaveAsDialog(blob);
+
+                    connection.recorder = null;
+
+                });
+            })
+
+            $("#btnScreen").on("click", function () {
+
+
+
+                if ($("#btnScreen").text() == '分享桌面') {
+                    getScreenStream(function (screen) {
+
+                        //console.log(connection.getAllParticipants())
+                        var isLiveSession = connection.getAllParticipants().length > 0;
+                        if (isLiveSession) {
+
+                                replaceTrack(RMCMediaTrack.screen);
+
+                        }
+
+                        // now remove old video track from "attachStreams" array
+                        // so that newcomers can see screen as well
+                        connection.attachStreams.forEach(function (stream) {
+                            stream.getVideoTracks().forEach(function (track) {
+                                stream.removeTrack(track);
+                            });
+
+                            // now add screen track into that stream object
+
+                                stream.addTrack(RMCMediaTrack.screen);
+
+                        });
+                    });
+                    $("#btnScreen").text('分享摄像头')
+                }
+                else {
+
+                    if (RMCMediaTrack.cameraStream.getVideoTracks()[0].readyState) {
+                        RMCMediaTrack.cameraStream.getVideoTracks().forEach(function (track) {
+                            RMCMediaTrack.cameraStream.removeTrack(track);
+                        });
+                        RMCMediaTrack.cameraStream.addTrack(RMCMediaTrack.cameraTrack);
+                    }
+
+                    //RMCMediaTrack.selfVideo.srcObject = RMCMediaTrack.cameraStream;
+
+                    connection.socket && connection.socket.emit(connection.socketCustomEvent, {
+                        justStoppedMyScreen: true,
+                        userid: connection.userid
+                    });
+
+                    // share camera again
+                    replaceTrack(RMCMediaTrack.cameraTrack);
+
+                    // now remove old screen from "attachStreams" array
+                    connection.attachStreams = [RMCMediaTrack.cameraStream];
+
+
+
+
+                    $("#btnScreen").text('分享桌面')
+                }
+
+                //connection.session.video = false;
+                //connection.resetScreen();
+
+               // window.location.href="@(Request.ApplicationPath.TrimEnd('/'))/MeetRtc/index?mid=@(ViewBag.mid)&vid=1"
+
+            })
+
+            //点击发送讨论
+            $("#BtnMessage").on("click", function () {
+
+                if ($("#text_content").val() == '') {
+
+                }
+                else {
+                    var mes = {
+                        type: '3', content: { userName: '@(ViewBag.TrueName)', Message: $("#text_content").val(), photo:'@(ViewBag.headPhoto)' }
+                    }
+                    connection.send(mes);
+                    appenddiscuss('@(ViewBag.TrueName)', '@(ViewBag.headPhoto)', $("#text_content").val())
+
+                      $.ajax({
+                                    type: "get",
+                          url: "@(Request.ApplicationPath.TrimEnd('/'))/MeetRtc/SetDiscuss?mid=@(ViewBag.mid)&UserName=@(ViewBag.TrueName)&Content=" + $("#text_content").val(),
+                                    success: function (data, status) {
+                                        $("#text_content").val("");
+                                    }
+                                });
+                }
+            })
+        })
+
+        function appenddiscuss(userName,photo,content) {
+            var disDiv = $("#discussDiv");
+            var textContent = '<div class="vrc-item"><p class= "clearfix lihe30"><span class="float-l"><img src="' + photo + '" class="head-simg mr10" /><span class="mem-width color-9">' + userName + '</span></span><span class="float-r color-9">' + new Date().Format("yyyy-MM-dd hh:mm:ss") + '</span></p ><p class="vrci-txt">' + content + '</p></div >'
+            disDiv.append(textContent);
+        }
+        Date.prototype.Format = function (fmt) { //author: meizz
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+                "h+": this.getHours(), //小时
+                "m+": this.getMinutes(), //分
+                "s+": this.getSeconds(), //秒
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                "S": this.getMilliseconds() //毫秒
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[
+                    k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
+
+         function ChangeImage() {
+                var videoPreview = document.getElementById('video-preview');
+                var cxt = document.getElementById('canvass').getContext('2d');
+
+                cxt.drawImage(videoPreview, 20, 20);
+
+                var mycanvas = document.getElementById("canvass");
+                var image = mycanvas.toDataURL("image/png");
+
+                var imag = $("#user@(ViewBag.UID)").children('img');
+
+                 imag.attr("src", image)
+                var mes = { type: '5', content: { userID: '@(ViewBag.UID)', ImageUrl: image } }
+                connection.send(mes);
+
+
+
+            }
+    </script>
+
+</body>
+</html>

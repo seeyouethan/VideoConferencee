@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <title>当前在线成员</title>
+   <!-- 引入样式 -->
+   <link rel="stylesheet" href="css/Element-UI/index.css">
+   <link rel="stylesheet" type="text/css" href="css/iconfont.css">
+   <link href="RtcMultiConnection/getHTMLMediaElement.css" rel="stylesheet" />
+   <link rel="stylesheet" type="text/css" href="css/style.css">
+   <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+   </style>
+</head>
+
+<body>
+   <div id="app">
+      <el-container>
+            <h2>Oaokcs端在线用户</h2>
+         <div>
+               <el-scrollbar style="margin: 0 auto; height: 300px;" >
+                     <el-table v-bind:data="tableData" style="width: 100%">
+                        <el-table-column prop="date" label="用户id" width="200">
+                        </el-table-column>
+                        <el-table-column prop="name" label="上线时间" width="380">
+                        </el-table-column>
+                        
+                     </el-table>
+                  </el-scrollbar>
+         </div>
+
+      </el-container>
+      <el-container>
+         <h2>OA端在线用户</h2>
+            <el-scrollbar style="margin: 0 auto; height: 300px;" >
+               <el-table v-bind:data="tableData" style="width: 100%">
+                  <el-table-column prop="date" label="用户id" width="200">
+                  </el-table-column>
+                  <el-table-column prop="name" label="上线时间" width="380">
+                  </el-table-column>
+                  
+               </el-table>
+            </el-scrollbar>
+   
+         </el-container>
+   </div>
+   <script src=https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js> </script> <!-- 引入vue组件库 -->
+   <script src="js/vue.js"></script>
+   <script src="js/index.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+   <script src="js/vue-infinite-loading.js"></script>
+   <script>
+
+      Vue.http.options.root = 'http://okcs.test.cnki.net';
+      Vue.http.headers.common['ignore-identity'] = "true";
+
+      new Vue({
+         el: '#app',
+         data: function () {
+            return {
+               tableData: [{
+                  date: '2016-05-03',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-02',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-04',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-01',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-08',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-06',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }, {
+                  date: '2016-05-07',
+                  name: '王小虎',
+                  province: '上海',
+                  city: '普陀区',
+                  address: '上海市普陀区金沙江路 1518 弄',
+                  zip: 200333
+               }],
+
+
+            }
+         },
+         created: function () {
+         },
+
+
+         methods: {
+
+         },
+
+         watch: {
+           
+         },
+
+      })
+
+
+
+   </script>
+  
+</body>
+
+</html>

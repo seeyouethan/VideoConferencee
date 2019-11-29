@@ -1,0 +1,62 @@
+.group-div-top{
+    padding: 10px;;
+}
+/*成员删除样式*/
+.people-group>span{position: relative;display: inline-block;vertical-align: middle;line-height: 1;}
+.people-group .del-redT i {position: absolute;top: 50%;left: 50%;margin-top: -7px;margin-left: -8px;color: #fff;width: 1em;height: 1em;display: inline-block;vertical-align: middle}
+.people-group .del-redT {display: inline-block;text-align: center;font-size: 16px;color: #fff;background: rgba(0,0,0,.4); border-radius: 50%;overflow: hidden;-webkit-transition: all .2s ease-out;transition: all .2s ease-out;position: absolute;top: 50%;bottom: 50%;left: 50%;right: 50%}
+.people-group:hover .del-redT {top: 0;bottom: 0;left: 0;right: 0}
+.login-dialog .el-dialog__body{padding:0 30px;}
+.icon-addPerson{cursor: pointer;;}
+.icon-addPerson:hover{color: #409EFF;}
+
+.group-admin{color: #409EFF;
+
+}
+.group-name{
+    cursor: pointer;
+}
+.announcement-content{
+    padding: 10px;
+    text-indent:25px;
+}
+.announcement-bottom{
+    float:right;
+    margin-right: 2px;
+    color: gray;
+    font-size:10px;
+    margin-bottom: 10px;;
+}
+.vr-con-announcement{
+    height: calc(100vh - 350px);
+}
+.el-select-dropdown .el-scrollbar__wrap, .el-dialog__body .el-scrollbar__wrap {
+     overflow-x: hidden; 
+}
+.announcement-bottom-button button{
+    border: none;;
+}
+.a-height textarea{
+    height: 200px !important;
+}
+.div-announcement{
+    margin-top:10px;
+    margin-right:20px;
+    background:rgba(0,0,0,.1);
+    padding: 10px;
+    border-radius: 2px;
+    box-shadow: 0 0 3px #000 inset;
+}
+
+.el-pagination{
+    margin-top:20px;
+}
+
+.announcement-empty{
+    height: 200px;
+    font-size: 30px;
+    color: grey;
+    text-align: center;
+    line-height: 200px;
+    color:rgba(0,0,0,.4);
+}

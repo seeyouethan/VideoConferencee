@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <title>刘静杰</title>
+   <!-- 引入样式 -->
+   <link rel="stylesheet" href="css/Element-UI/index.css">
+   <link rel="stylesheet" type="text/css" href="css/iconfont.css">
+   <link href="RtcMultiConnection/getHTMLMediaElement_trtc.css" rel="stylesheet" />
+   <link rel="stylesheet" type="text/css" href="css/style.css">
+   <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+   </style>
+</head>
+
+<body>
+   <div id="app">
+      <el-container>
+         <!-- 顶部 -->
+         <el-header class="vh-top clearfix">
+            <h1 class="float-l">让设计更有说服力的20条经典原则：伯斯塔尔法则、系列位置效应</h1>
+            <div class="float-r">
+               <i class="bg-icon iconfont icon-video1"></i>
+               <i class="bg-icon iconfont icon-pm" v-on:click="ChangeVideoSource('desktop')"></i>
+               <i class="bg-icon iconfont icon-set" v-on:click="ShowSettingDialog"></i>
+               <i class="bg-icon iconfont" v-bind:class="{ 'icon-wg': !isFocused,'icon-zcr': isFocused }"
+                  v-on:click="showRight=!showRight"></i>
+               <i class="bg-icon iconfont icon-discuss"></i>
+               <i class="bg-icon iconfont icon-gd" v-on:click="MixAudio"></i>
+            </div>
+         </el-header>
+         <!-- 主体内容 -->
+         <el-main class="v-main">
+            <!-- 右侧-讨论区 -->
+            <div class="video-r" v-bind:class="{ r0: showRight }">
+               <!-- 点击此按钮可以收起右侧 点击时给div加类名r0-->
+               <span class="iconfont icon-rightJ" v-on:click="showRight=!showRight"></span>
+               <el-tabs v-model="activeName">
+                  <el-tab-pane label="讨论区" name="first">
+                     <!-- 讨论区内容 v-on:mousewheel.native="scroll"-->
+                     <el-scrollbar class="vr-con clearfix" ref="talkPanel">
+                        <infinite-loading direction="top" @infinite="infiniteHandler" spinner="spiral">
+                           <div slot="no-more"></div>
+                        </infinite-loading>
+                        <div class="vrc-item" v-for="(item, index) in conferenceMsgs">
+                           <p class="clearfix lihe30">
+                              <span class="float-l">
+                                 <img v-bind:src="item.photo" class="head-simg mr10" v-cloak />
+                                 <span class="mem-width color-9" v-cloak>{{item.trueName}}</span>
+                              </span>
+                              <span class="float-r color-9" v-cloak>{{item.dateTime}}</span>
+                           </p>
+                           <p class="vrci-txt" v-cloak v-html="item.msgContent">
+                              {{}}
+                           </p>
+                        </div>
+
+                     </el-scrollbar>
+                     <div class="vr-bot">
+                        <el-input type="textarea" v-model.trim="msgContent" v-on:keyup.enter.native="SendMessage()">
+                        </el-input>
+                        <button type="submit" slot="reference" class="btn-blue"
+                           v-on:click.prevent="SendMessage()">发表意见</button>
+                     </div>
+                  </el-tab-pane>
+                  <el-tab-pane label="文档讨论" name="second"></el-tab-pane>
+               </el-tabs>
+            </div>
+            <!-- 左侧-参与人 -->
+            <div class="video-l" v-bind:class="{ l0: showLeft }">
+               <!-- 点击此按钮可以收起右侧 点击时给div加类名l0-->
+               <span class="iconfont icon-rightJian" v-on:click="showLeft=!showLeft"></span>
+               <div class="vl-top clearfix">
+                  <p class="float-l font-s18"><i class="iconfont icon-cy"></i>参与人<i class="color-6 font-s16"
+                        v-cloak>({{onlineCount}}/{{totalCount}})</i>
+                  </p>
+               </div>
+               <el-scrollbar class="vl-con clearfix">
+                  <ul class="member-ul">
+                     <li v-for="(item, index) in members" v-bind:data-uid="item.UserID" v-bind:title="item.NickName"
+                        class="member-li">
+                        <img v-bind:src="item.photo" class="head-img mr10">
+                        <span class="p1" v-bind:title="item.NickName" v-cloak>{{item.NickName}}</span>
+                        <span><i class="bg-icon iconfont icon-video1"></i></span>
+                        <span><i class="bg-icon iconfont icon-yes"></i></span>
+                        <span><i class="bg-icon iconfont icon-no"></i></span>
+                        <span class="tab-status"></span>
+                  </ul>
+               </el-scrollbar>
+            </div>
+            <div class="video-con">
+               <div class="vc-top">
+
+                  <div class="clearfix" style="display: none;">
+                     <el-dropdown trigger="click" placement="bottom" @command="ChangeVideoSource">
+                        <span class="el-dropdown-link share-sel float-l">
+                           <i class="iconfont icon-share1"></i>
+                           <i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown" v-cloak>
+                           <el-dropdown-item v-if="hasCamera" command="camera">分享摄像头</el-dropdown-item>
+                           <el-dropdown-item command="desktop">分享桌面</el-dropdown-item>
+                        </el-dropdown-menu>
+                     </el-dropdown>
+                     <div class="float-r tab-group">
+                        <span class="tabg-item" v-bind:class="{ cur: !isFocused }" title="平铺模式"
+                           v-on:click="resharpElementOverlay()"><i class="iconfont icon-wg"></i></span>
+                        <span class="tabg-item" v-bind:class="{ cur: isFocused }" title="演讲者模式"
+                           v-on:click="resharpElementFocus()"><i class="iconfont icon-zcr"></i></span>
+                     </div>
+                     <button class="btn-blue change-btn" v-if="hasCamera" v-on:click="dialogVisible = true">设置</button>
+                  </div>
+
+                  <!-- <button class="btn-blue change-btn" v-if="hasCamera" v-on:click="ShowCamera()"
+                     v-bind:disabled="btnDisable">分享摄像头</button>
+                  <button class="btn-blue change-btn" v-on:click="ShowDesktop()"
+                     v-bind:disabled="btnDisable">分享桌面</button>
+                     <button class="btn-blue change-btn float-r" v-on:click="resharpElementFocus()">主持人模式</button>
+                     <button class="btn-blue change-btn float-r mr10" v-on:click="resharpElementOverlay()">平铺模式</button> -->
+
+                  <!-- 视频窗口 -->
+                  <el-scrollbar class="vm-con clearfix">
+                     <div class="" id="videos-container"></div>
+                  </el-scrollbar>
+
+               </div>
+            </div>
+         </el-main>
+         <!-- 弹窗 -->
+         <!-- 设置弹窗 -->
+         <el-dialog visible width="750px" v-bind:visible.sync="dialogVisible" v-cloak>
+            <el-form ref="form" label-width="120px">
+               <el-form-item label="摄像头：">
+                  <el-select v-model="value_camera">
+                     <el-option v-for="item in videoinputList" :key="item.value" :label="item.label"
+                        :value="item.value">
+                     </el-option>
+                  </el-select>
+               </el-form-item>
+               <el-form-item label="麦克风：">
+                  <el-select v-model="value_audio" @change="ChangeAudio">
+                     <el-option v-for="item in audioinputList" :key="item.value" :label="item.label"
+                        :value="item.value">
+                     </el-option>
+                  </el-select>
+                  <el-progress :percentage="audio_percentage"></el-progress>
+               </el-form-item>
+               <el-form-item label="摄像头分辨率：">
+                  <el-select v-model="value_reso">
+                     <el-option label="1280x720" value="0">1280x720</el-option>
+                     <el-option label="960x720" value="1">960x720</el-option>
+                     <el-option label="800x600" value="2">800x600</el-option>
+                     <el-option label="640x480" value="3">640x480</el-option>
+                     <el-option label="160x90" value="4">160x90</el-option>
+                  </el-select>
+               </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+               <el-button type="primary" v-on:click="ChangeCamera">确 定</el-button>
+               <el-button v-on:click="dialogVisible = false">取 消</el-button>
+            </span>
+         </el-dialog>
+      </el-container>
+   </div>
+   <script src=https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js> </script> <!-- 引入vue组件库 -->
+   <script src="js/vue.js"></script>
+   <script src="js/index.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+
+   <!-- 引入RtcMultiConnection组件库 -->
+   <script src="RtcMultiConnection/RTCMultiConnection.js"></script>
+   <script src="RtcMultiConnection/socket.io.js"></script>
+   <script src="RtcMultiConnection/adapter.js"></script>
+   <script src="RtcMultiConnection/getHTMLMediaElement.js"></script>
+
+   <script src="js/vue-infinite-loading.js"></script>
+
+
+   <script src="trtc/js/popper.js"></script>
+   <script src="trtc/js/toastify.js"></script>
+   <script src="trtc/js/bootstrap-material-design.min.js"></script>
+   <script>$(document).ready(function () { $('body').bootstrapMaterialDesign(); });</script>
+   <!-- 引入 TRTC WEB SDK 脚本 -->
+   <script src="trtc/js/trtc.js"></script>
+   <!-- Demo 相关脚本 -->
+   <script src="trtc/js/lib-generate-test-usersig.min.js"></script>
+   <script src="trtc/js/debug/GenerateTestUserSig.js"></script>
+   <script src="trtc/js/utils.js"></script>
+   <script src="trtc/js/rtc-client.js"></script>
+   <script src="trtc/js/index.js"></script>
+
+
+
+   <script>
+
+      //Vue.http.options.root = 'http://okcs.test.cnki.net';
+      Vue.http.headers.common['ignore-identity'] = "true";
+
+      new Vue({
+         el: '#app',
+         data: function () {
+            return {
+               audioContext: null,
+               audio_percentage: 0,
+               value_camera: '',
+               value_audio: '',
+               value_reso: "0",//下拉列表的值
+               value_camera_width: 1280,
+               value_camera_height: 720,
+               visible: false,
+               activeName: 'first',
+               showLeft: false,//左侧隐藏与显示
+               showRight: false,//左侧隐藏与显示
+               members: [],//群组成员数组
+               onlineCount: 0,//当前在线成员
+               totalCount: 0,//群组中成员总数
+               isMember: false,//当前用户是否是群组成员，如果不是，则关闭窗口
+               hasCamera: false,//是否有摄像头
+               btnDisable: false,//按钮是否可用，用于防止重复提交
+               conferenceMsgs: [],//群组讨论消息
+
+
+               uid: "fb06b776-166e-4924-a5be-168c8b6dae15",//当前用户的userid
+               trueName: "李伟健",//当前用户的真实姓名
+               conferenceId: "19881988",//当前群组id
+               msgContent: "this is a test message",//发表意见的内容
+
+               pageNo: 0,//右侧聊天页面的页码
+
+               isFocused: true,//平铺或者演讲者模式
+               dialogVisible: false,
+
+               videoinputList: [],//视频设备列表
+
+               audioinputList: [],//音频设备
+
+            }
+         },
+         created: function () {
+            var self = this;
+            //Trtc对象
+            window.rtc = null;
+
+            //房间号（群组id）                  
+            window.groupid = "19881988";
+            //当前用户id
+            //window.uid = "static" + Math.round(Math.random() * 10000);
+            window.uid = "fb06b776-166e-4924-a5be-168c8b6dae15";
+
+            window.getFocusedStatus = function () {
+               return self.isFocused;
+            }
+
+            //关闭当前窗口函数-- 不是群组成员的时候，调用一下
+            window.CloseWindow = function () {
+               var userAgent = navigator.userAgent;
+               if (userAgent.indexOf("Firefox") != -1 || userAgent.indexOf("Chrome") != -1) {
+                  location.href = "about:blank";
+               } else {
+                  window.opener = null;
+                  window.open('', '_self');
+               }
+               window.close();
+            };
+
+            //请求群组成员接口 get 同时判断自己是否是该群组成员，如果不是，则关闭窗口
+            this.$http.get('IM/Chat/GetGroupMembers?groupid=52').then(function (res) {
+               console.log(res)
+            }, function () {
+               console.log('请求失败处理');
+               //模拟数据
+               self.members = [{ "ID": 413, "GroupID": "52", "UserID": "689b7df5-9b54-4b61-a028-07e65b667e4d", "NickName": "刘静杰", "isAdmin": 1, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1543818121000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "http://oaokcs.cnki.net/sso/pic/689b7df5-9b54-4b61-a028-07e65b667e4d" }, { "ID": 414, "GroupID": "52", "UserID": "fb06b776-166e-4924-a5be-168c8b6dae15", "NickName": "李伟健", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1543818121000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "http://oaokcs.cnki.net/sso/pic/fb06b776-166e-4924-a5be-168c8b6dae15" }, { "ID": 959, "GroupID": "52", "UserID": "097e2c16-b7cb-4191-a64d-79b1ca840a17", "NickName": "郭帅11342", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1555403131000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "http://oaokcs.cnki.net/sso/pic/097e2c16-b7cb-4191-a64d-79b1ca840a17" }, { "ID": 1018, "GroupID": "52", "UserID": "a99799ee-6a47-4a44-95ad-c6de602d3d04", "NickName": "申志云", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1555644669000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/a99799ee-6a47-4a44-95ad-c6de602d3d04" }, { "ID": 1019, "GroupID": "52", "UserID": "972597c1-b957-450c-9f2b-c44257bf4fdc", "NickName": "于江虎", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1555644746000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/972597c1-b957-450c-9f2b-c44257bf4fdc" }, { "ID": 1027, "GroupID": "52", "UserID": "4ab0ab13-387d-44fc-8fd8-da6cadbd4be1", "NickName": "相生昌", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1556264298000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/4ab0ab13-387d-44fc-8fd8-da6cadbd4be1" }, { "ID": 1028, "GroupID": "52", "UserID": "ccaa5f0c-82cd-4293-8c88-5b9115e0f138", "NickName": "张钊源", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1556264851000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/ccaa5f0c-82cd-4293-8c88-5b9115e0f138" }, { "ID": 1029, "GroupID": "52", "UserID": "a9d8bfc8-f91c-4cdc-ba8c-4864c95c4631", "NickName": "孔凡多", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1556264851000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/a9d8bfc8-f91c-4cdc-ba8c-4864c95c4631" }, { "ID": 1030, "GroupID": "52", "UserID": "59c27019-6c21-424c-bfec-b2a764964793", "NickName": "李梦月", "isAdmin": 0, "Creator": "689b7df5-9b54-4b61-a028-07e65b667e4d", "CreateDate": "\/Date(1556264851000)\/", "Result": null, "ResultMsg": null, "ResultDate": null, "photo": "//oaokcs.cnki.net/sso/pic/59c27019-6c21-424c-bfec-b2a764964793" }];
+
+               self.totalCount = self.members.length;
+
+               var isMember = false;
+               self.members.forEach(function (item) {
+
+                  if (item.UserID == uid)
+                     isMember = true;
+                  return false;
+               });
+               if (!isMember) {
+                  //CloseWindow();
+               }
+            });
+
+
+
+            //用户上线，改变状态
+            window.UserOnline = function (uid) {
+               var ele = $(".member-ul li[data-uid='" + uid + "']");
+               if (ele.length !== 0) {
+                  if (!ele.find(".tab-status").hasClass("in")) {
+                     ele.find(".tab-status").addClass("in");
+                     if (ele.index() === 0) {
+                        //第一个固定不动
+                     } else {
+                        ele.fadeOut(10).fadeIn(100);
+                        $(ele).insertAfter($(".member-ul").find("li").eq(0))
+                     }
+                     self.onlineCount++;
+                  }
+               } else {
+                  console.log("UserOnline Error! 未找到对应的成员");
+               }
+            }
+            //用户离线，改变状态
+            window.UserOffline = function (uid) {
+               var ele = $(".member-ul li[data-uid='" + uid + "']");
+               if (ele.length !== 0) {
+                  if (ele.find(".tab-status").hasClass("in")) {
+                     ele.find(".tab-status").removeClass("in");
+
+                     ele.fadeOut(10).fadeIn(100);
+                     $(".member-ul").append(ele);
+                     self.onlineCount--;
+                  }
+               } else {
+                  console.log("UserOnline Error! 未找到对应的成员");
+               }
+            }
+
+            //是否有摄像头，改变hasCamera的状态
+            window.SetHasCamera = function (b) {
+               self.hasCamera = b;
+            }
+
+            //设置为焦点
+            window.SetFocus = function (element) {
+               //1.获取到div   2.放到第一个   3.宽度修改
+               var ele = $(element).parent().parent().get(0);
+               var eleOld = document.getElementById("videos-container").firstChild;
+               if ($(eleOld).attr("data-uid") === $(ele).attr("data-uid")) {
+                  //点击了已经处于焦点的视频
+                  return;
+               } else {
+                  // 修改ele宽度ele,修改eleold的宽度，移动ele到第一位
+                  var focusedWidth = $("#videos-container").width();
+                  var width = focusedWidth / 3 - 16;
+                  ele.style.width = focusedWidth + 'px';
+                  ele.style.height = focusedWidth * 3 / 4 + 4 + 'px';
+                  eleOld.style.width = width + 'px';
+                  eleOld.style.height = width * 3 / 4 + 4 + 'px';
+                  $(ele).prependTo("#videos-container");
+               }
+            }
+
+            this.GetConferenceMessages()
+
+
+            window.GetMessage = function (data) {
+               this.conferenceMsgs.push(data);
+            }
+
+            //移除缓存中用户为分享状态
+            window.RemoveOnLiveUser = function () {
+               var formData = new FormData(); //FormData构造器接收的是一个form的DOM对象
+               formData.append('conferenceid', "07028c69-0399-4edd-b71e-5fff1baf2a03");
+               formData.append('uid', '972597c1-b957-450c-9f2b-c44257bf4fdc');
+               self.$http.post('http://oaokcs.cnki.net/imwebapi/api/VideoConferenceApi/RemoveOnLiveUser', formData, { emulateJson: true }).then(
+                  result => {
+                     if (result.data.Success) {
+
+                     } else {
+                        console.log(result.data.Error);
+                     }
+                  });
+            }
+            window.fun1 = function () {
+               navigator.getUserMedia({
+                  video: true,
+                  audio: true
+               }, function (stream) {
+                  //有摄像头
+                  self.hasCamera = true;
+                  self.liveType = "camera";
+                  self.ShowCamera();
+
+               }, function (error) {
+                  //无摄像头
+                  self.hasCamera = false;
+                  self.liveType = "desktop";
+                  self.ShowDesktop();
+               });
+            }
+
+
+            //初始化rtc客户端
+            var userId = self.uid;
+            var roomId = '113fb36';
+            var config = genTestUserSig(userId);
+            rtc = new RtcClient({
+               userId,
+               roomId,
+               sdkAppId: config.sdkAppId,
+               userSig: config.userSig
+            });
+            rtc.join();
+
+         },
+
+
+         methods: {
+            //显示设置界面并绑定对应的数据源
+            ShowSettingDialog: function () {
+               this.dialogVisible = true;
+               this.videoinputList = [];
+               this.audioinputList = [];
+               var self = this;
+               navigator.mediaDevices.enumerateDevices().then(function (devices) {
+                  for (var i = 0; i < devices.length; i++) {
+                     var device = devices[i];
+                     if (device.kind === 'videoinput' && device.label !== 'screen-capture-recorder') {
+                        self.videoinputList.push({ value: device.deviceId, label: device.label });
+                     }
+                     if (device.kind === 'audioinput') {
+                        self.audioinputList.push({ value: device.deviceId, label: device.label });
+                     }
+                  };
+                  if (self.videoinputList.length != 0) {
+                     if (self.value_camera == "") {
+                        self.value_camera = self.videoinputList[0].value;
+                     }
+                  }
+                  if (self.audioinputList.length != 0) {
+                     if (self.value_audio == "") {
+                        self.value_audio = self.audioinputList[0].value;
+                     }
+                     self.ShowAudioData();
+                  }
+               });
+
+            },
+
+            //显示选中麦克风的音量
+            ShowAudioData: function () {
+               var self = this;
+               navigator.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+               if (self.audioContext)
+                  self.audioContext.close();
+               self.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+               var mediaStreamSource = null;
+               var scriptProcessor = null;
+
+               var constraintsAudio = {
+                  audio: {
+                     optional: [{
+                        sourceId: self.value_audio,
+                     }]
+                  }
+               };
+
+
+               navigator.getUserMedia(constraintsAudio).then(function (stream) {
+                  // 将麦克风的声音输入这个对象
+                  mediaStreamSource = self.audioContext.createMediaStreamSource(stream)
+                  // 创建一个音频分析对象，采样的缓冲区大小为4096，输入和输出都是单声道
+                  scriptProcessor = self.audioContext.createScriptProcessor(4096, 1, 1)
+                  // 将该分析对象与麦克风音频进行连接
+                  mediaStreamSource.connect(scriptProcessor)
+                  // 此举无甚效果，仅仅是因为解决 Chrome 自身的 bug
+                  scriptProcessor.connect(self.audioContext.destination)
+
+                  // 开始处理音频
+                  scriptProcessor.onaudioprocess = function (e) {
+                     // 获得缓冲区的输入音频，转换为包含了PCM通道数据的32位浮点数组
+                     var buffer = e.inputBuffer.getChannelData(0)
+                     // 获取缓冲区中最大的音量值
+                     var maxVal = Math.max.apply(Math, buffer)
+                     // 显示音量值
+                     var val = Math.round(maxVal * 100);
+                     if (val > 100) {
+                        val = 100;
+                     }
+                     self.audio_percentage = val;
+                  };
+               }).catch(function (err) {
+                  console.log(err);
+               });
+            },
+
+            //麦克风下拉列表触发事件
+            ChangeAudio: function (selVal) {
+               this.value_audio = selVal;
+               this.ShowAudioData();
+            },
+
+
+            //设置界面的确定按钮触发事件
+            ChangeCamera: function () {
+               var self = this;
+               //根据id修改视频源
+               connection.attachStreams.forEach(function (localStream) {
+                  localStream.stop();
+               });
+               setTimeout(function () {
+                  connection.mediaConstraints = {
+                     audio: {
+                        mandatory: {
+                           echoCancellation: false, // disabling audio processing
+                           googAutoGainControl: true,
+                           googNoiseSuppression: true,
+                           googHighpassFilter: true,
+                           googTypingNoiseDetection: true,
+                           //googAudioMirroring: true
+                        },
+                        optional: [{
+                           sourceId: self.value_audio,
+                        }]
+                     },
+                     video: {
+                        optional: [{
+                           sourceId: self.value_camera,
+                        }],
+                        mandatory: {
+                           maxWidth: self.value_camera_width,
+                           maxHeight: self.value_camera_height,
+                           //minAspectRatio: 1.77
+                        },
+                     }
+                  };
+                  connection.addStream({
+                     video: true,
+                     audio: true,
+                  });
+               }, 500);
+
+               this.dialogVisible = false;
+            },
+
+            //用户上线
+            UserOnline: function (uid) {
+               UserOnline(uid);
+            },
+            scroll: function (e) {
+
+            },
+            //切换到摄像头显示/切换摄像头源
+            ShowCamera: function () {
+               if (!rtc) {
+                  self.$message({
+                     showClose: true,
+                     message: '请先加入房间！',
+                     type: 'warning'
+                  });
+                  //再初始化一次
+                  rtc = new RtcClient({
+                     userId,
+                     roomId,
+                     sdkAppId: config.sdkAppId,
+                     userSig: config.userSig
+                  });
+                  rtc.join().then(result => {rtc.publish();});
+               }else{
+               rtc.publish();
+               }
+               //设置为平铺
+               this.resharpElementOverlay();
+            },
+            //切换到屏幕分享显示/切换屏幕分享源
+            ShowDesktop: function () {
+
+            },
+
+            MixAudio: function () {
+               navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(stream => {
+
+                  var firstStream = stream;
+                  var screenVideoTrack = stream.getVideoTracks()[0];
+                  var secondStream = document.getElementsByTagName('video')[0].srcObject;
+                  var secondStreamAudio = document.getElementsByTagName('video')[0].srcObject.getAudioTracks()[0];
+                  var mixer = new MultiStreamsMixer([firstStream, secondStream]);
+
+
+                  var kk = mixer.getMixedStream();
+                  document.getElementsByTagName('video')[0].srcObject.removeTrack(secondStreamAudio);
+                  document.getElementsByTagName('video')[0].srcObject.addTrack(kk.getAudioTracks()[0]);
+
+
+
+                  var trackToReplaceVideo = screenVideoTrack;
+                  var trackToReplaceAudio = kk.getAudioTracks()[0];;
+
+                  connection.attachStreams.forEach(function (stream) {
+                     stream.getVideoTracks().forEach(function (track) {
+                        stream.removeTrack(track);
+                     });
+
+                     // now add screen track into that stream object
+
+                     stream.addTrack(screenVideoTrack);
+                  });
+
+                  connection.getAllParticipants().forEach(function (pid) {
+                     var peer = connection.peers[pid].peer;
+                     if (!peer.getSenders) return;
+
+
+                     peer.getSenders().forEach(function (sender) {
+                        if (!sender || !sender.track) return;
+
+                        if (sender.track.kind === 'audio' && trackToReplaceAudio) {
+                           sender.replaceTrack(trackToReplaceAudio);
+                           trackToReplace = null;
+                        }
+                        if (sender.track.kind === 'video' && trackToReplaceVideo) {
+                           sender.replaceTrack(trackToReplaceAudio);
+                           trackToReplace = null;
+                        }
+                     });
+                  });
+
+
+
+
+
+
+               })
+            },
+
+
+            GetConferenceMessages: function () {
+               var self = this;
+               console.log("请求数据----pageNo--->", this.pageNo);
+               //请求群组讨论的数据
+               this.$http.get('imwebapi/api/mainapi/GetConferenceMsg?pageNo=' + self.pageNo).then(function (res) {
+                  console.log(res)
+               }, function () {
+                  console.log('请求失败处理');
+                  //模拟数据
+                  self.conferenceMsgs.unshift({ "conferenceId": "52", "uid": "689b7df5-9b54-4b61-a028-07e65b667e4d", "trueName": "刘静杰", "photo": "http://oaokcs.cnki.net/sso/pic/689b7df5-9b54-4b61-a028-07e65b667e4d", "msgContent": "adfadfadfadsf", "msgType": 0, "dateTime": "2019/09/04 14:19:26", "ext": "" });
+
+
+                  self.scrollDating = false;//数据请求完毕
+
+               });
+            },
+
+            ScrollToBottom: function () {
+               var a = this.$refs['talkPanel'];
+               //------滚动条，滚动到最后------
+               var div = this.$refs['talkPanel'].$refs['wrap'];
+               this.$nextTick(() => {
+                  div.scrollTop = div.scrollHeight;
+               });
+               //-----------------
+            },
+
+            SendMessage: function () {
+               var content = this.msgContent.replace(/\r\n/g, '<br/>').replace(/\n/g, '<br/>').replace(/\s/g, '&nbsp;');
+               connection.send(content);
+
+            },
+
+            //滑动加载插件事件
+            infiniteHandler: function ($state) {
+               this.conferenceMsgs.unshift({ "conferenceId": "52", "uid": "689b7df5-9b54-4b61-a028-07e65b667e4d", "trueName": "刘静杰", "photo": "http://oaokcs.cnki.net/sso/pic/689b7df5-9b54-4b61-a028-07e65b667e4d", "msgContent": "adfadfadfadsf", "msgType": 0, "dateTime": "2019/09/04 14:19:26", "ext": "" });
+               $state.loaded();
+               $state.complete();
+               console.log("向上--->");
+            },
+
+            //平铺模式
+            resharpElementOverlay: function () {
+               this.isFocused = false;
+               // 1.div的宽度
+               var width = $("#videos-container").width() / 2 - 16;
+               $.each($("#videos-container").children("div"), function (index, element) {
+                  element.style.width = width + 'px';
+                  element.style.height = width * 3 / 4 + 'px';
+               });
+            },
+
+            //主持人模式
+            resharpElementFocus: function () {
+               this.isFocused = true;
+
+               var focusedElement = document.getElementById("videos-container").firstChild;
+
+               //如果左右两侧全部收起来，那么就采用左右布局
+               if (this.showLeft && this.showRight) {
+                  var lHeight = $(".vm-con").height();
+                  var lWidth = $(".vm-con").width();
+                  var lHeight_sub = lHeight / 3 - 15;//去掉margin的高度
+
+                  //根据lHehght_sub 计算 每个子元素的宽度，
+
+                  var lWidth_sub = lHeight_sub * 4 / 3 - 10;//去掉margin的宽度
+
+                  var lWidth_main = lWidth - lWidth_sub - 26;//去掉边框的宽度
+
+
+                  $(focusedElement).width(lWidth_main);
+                  $(focusedElement).height(lHeight - 17);
+
+                  if ($(focusedElement.firstChild).height() > (lHeight - 17)) {
+                     //设置video的高度
+                     $(document.getElementById("videos-container").firstChild.querySelector("video")).height(lHeight - 17);
+                  }
+                  $.each($("#videos-container").children("div"), function (index, element) {
+                     if (index !== 0) {
+                        element.style.width = lWidth_sub + 'px';
+                        element.style.height = lHeight_sub + 'px';
+                     }
+                  });
+               } else {
+
+                  var focusedWidth = $("#videos-container").width();;
+
+                  //2.下面的div的宽度
+                  var width = focusedWidth / 3 - 16;
+
+                  $("#videos-container div[data-uid='" + uid + "']").width(focusedWidth - 5);
+                  $("#videos-container div[data-uid='" + uid + "']").height((focusedWidth - 5) * 3 / 4);
+
+
+                  $("#videos-container div[data-uid='" + uid + "']").hide().prependTo("#videos-container").fadeIn();
+
+                  $.each($("#videos-container").children("div"), function (index, element) {
+                     if ($(element).attr('data-uid') != uid) {
+                        element.style.width = width + 'px';
+                        element.style.height = width * 3 / 4 + 'px';
+                     }
+                  });
+               }
+            },
+
+
+            ChangeVideoSource: function (command) {
+               if (command == 'camera') {
+                  this.ShowCamera();
+               } else if (command == 'desktop') {
+                  this.ShowDesktop();
+               }
+            }
+
+         },
+
+         watch: {
+            showRight(val, oldVal) {//普通的watch监听
+               if (this.isFocused) {
+                  setTimeout(this.resharpElementFocus, 400);
+               }
+               else {
+                  setTimeout(this.resharpElementOverlay, 400);
+               }
+            },
+
+            showLeft(val, oldVal) {//普通的watch监听
+
+               if (this.isFocused) {
+                  setTimeout(this.resharpElementFocus, 400);
+               }
+               else {
+                  setTimeout(this.resharpElementOverlay, 400);
+               }
+            },
+
+            value_reso(val, oldVal) {
+
+               if (val == "0") {
+                  this.value_camera_width = 1280;
+                  this.value_camera_height = 720;
+               }
+               else if (val == "1") {
+                  this.value_camera_width = 960;
+                  this.value_camera_height = 720;
+               } else if (val == "2") {
+                  this.value_camera_width = 800;
+                  this.value_camera_height = 600;
+               } else if (val == "3") {
+                  this.value_camera_width = 640;
+                  this.value_camera_height = 480;
+               } else if (val == "4") {
+                  this.value_camera_width = 160;
+                  this.value_camera_height = 90;
+               }
+            },
+
+         },
+
+      })
+
+
+
+   </script>
+   <script src="js/viceoConference_trtc.js"></script>
+
+   <!-- <script type="text/javascript" language="javascript">
+      $(window).bind('beforeunload', function () {
+         RemoveOnLiveUser();
+         alert("欢迎下次再来！");
+         return 'aaaa';
+      });
+   </script> -->
+
+</body>
+
+</html>
