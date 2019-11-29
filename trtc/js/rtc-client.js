@@ -318,14 +318,14 @@ class RtcClient {
       // microphoneId: getMicrophoneId()
     });
     // 设置视频分辨率帧率和码率
-    //this.localStream_.setVideoProfile(video_profile);
+    this.localStream_.setVideoProfile(video_profile);
 
-    this.localStream_.setVideoProfile({
-      width: 360, // 视频宽度
-      height: 360, // 视频高度
-      frameRate: 10, // 帧率
-      bitrate: 400 // 比特率 kbps
-    });
+    // this.localStream_.setVideoProfile({
+    //   width: 360, // 视频宽度
+    //   height: 360, // 视频高度
+    //   frameRate: 10, // 帧率
+    //   bitrate: 400 // 比特率 kbps
+    // });
 
     await this.localStream_.initialize();
   }
