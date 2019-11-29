@@ -123,6 +123,7 @@ Documentation - github.com/muaz-khan/WebRTC-Experiment/tree/master/getMediaEleme
     width: 100%;
     vertical-align: top;
     /* object-fit: cover; */
+    position: relative !important;
 }
 
 .media-box audio {

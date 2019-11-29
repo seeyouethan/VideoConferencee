@@ -318,7 +318,8 @@ class RtcClient {
       // microphoneId: getMicrophoneId()
     });
     // 设置视频分辨率帧率和码率
-    this.localStream_.setVideoProfile(video_profile);
+    debugger;
+    this.localStream_.setVideoProfile('1080p');
 
     // this.localStream_.setVideoProfile({
     //   width: 360, // 视频宽度
