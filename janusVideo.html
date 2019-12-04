@@ -410,7 +410,7 @@
                                                 remoteFeed = self.remoteFeeds[index];
                                                 if (remoteFeed != null) {
                                                    RemovePlayerElement(remoteFeed.display)
-                                                   remoteFeed.detach();
+                                                   //remoteFeed.detach();
                                                    //去掉摄像头标志
                                                    SetIsSpeaking(remoteFeed.display, false);
                                                 }
@@ -426,16 +426,39 @@
                                     }
                                  },
                                  onlocalstream: function (stream) {
+
+                                    if (stream.getVideoTracks().length == 0) {
+                                       return;
+                                    }
+
                                     //本地视频流
                                     var config = {
                                        uid: self.uid,//当前用户id
                                        videoid: 'video_' + self.uid,//生成的video的id
                                        realName: self.trueName,//真实姓名
-                                       muteAudio: null,//静音方法
-                                       unmuteAudio: null,//静音静音方法
-                                       muteVideo: null,//关闭视频方法
-                                       unmuteVideo: null,//取消关闭视频方法
-                                       gdVideo: function(){
+                                       muteAudio: function () {
+                                          sfutest.muteAudio();
+                                       },//静音方法
+                                       unmuteAudio: function () {
+                                          sfutest.unmuteAudio();
+                                       },//静音静音方法
+                                       muteVideo: function () {
+                                          unpublishOwnFeed();
+                                       },//关闭视频方法
+                                       unmuteVideo: function () {
+                                          sfutest.createOffer(
+                                             {
+                                                media: { addVideo: true },
+                                                success: function (jsep) {
+                                                   Janus.debug(jsep);
+                                                   sfutest.send({ message: { audio: true, video: true }, "jsep": jsep });
+                                                },
+                                                error: function (error) {
+                                                   alert("WebRTC error... " + JSON.stringify(error));
+                                                }
+                                             });
+                                       },//取消关闭视频方法
+                                       gdVideo: function () {
                                           unpublishOwnFeed();
                                        },//挂断图标对应的挂断方法                                       
                                     };
@@ -487,6 +510,7 @@
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        SetIsSpeaking(self.uid, true);
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -497,7 +521,11 @@
                //分享桌面
                sfutest.createOffer(
                   {
-                     media: { audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true, captureDesktopAudio: true, "video": "screen", },
+                     media: {
+                        audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true, captureDesktopAudio: true, "video": "screen",
+                        replaceVideo: true,
+                        replaceAudeo: true,
+                     },
                      success: function (jsep) {
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
@@ -578,7 +606,17 @@
                            UserOnline(uid);//设置为正在分享视频状态
                            remoteFeed.rfid = msg['id'];
                            remoteFeed.display = uid;
+                           //遍历下远端feeds
+                           var index = self.remoteFeeds.findIndex(item => {
+                              if (item.display == uid) {
+                                 return true;
+                              }
+                           })
+                           if (index !== -1) {
+                              self.remoteFeeds.splice(index, 1);
+                           }
                            self.remoteFeeds.push(remoteFeed);
+                           SetIsSpeaking(uid, false)
                            if (audio != null || video != null) {
                               SetIsSpeaking(uid, true)
                            }
@@ -661,10 +699,13 @@
                      //debugger;
                   },
                   onremotestream: function (stream) {
-                     var tracks=stream.getVideoTracks();
-                     if(tracks==null || tracks.length==0){
-                        return;
-                     }
+
+
+                     stream.oninactive = function (event) {
+                        RemovePlayerElement(uid);
+                        SetIsSpeaking(uid, false);
+                        return false;
+                     };
 
                      var config = {
                         uid: uid,//当前用户id
@@ -764,30 +805,47 @@
                }
             });
          }
-         window.toggleMute = function () {
-            var muted = sfutest.isAudioMuted();
-            Janus.log((muted ? "Unmuting" : "Muting") + " local stream...");
-            if (muted)
-               sfutest.unmuteAudio();
-            else
-               sfutest.muteAudio();
-            muted = sfutest.isAudioMuted();
-            $('#mute').val(muted ? "Unmute" : "Mute");
-         }
+        
 
          window.unpublishOwnFeed = function () {
+            //挂断自己的时候，先发布一个unpublish，然后过3秒钟再重新发一个重连的操作
+
+            // var unpublish = { "request": "unpublish" };
+            // sfutest.send({ "message": unpublish });
+
+            // setTimeout(function () { publishOwnFeed('none'); }, 3000)
+
+            // RemovePlayerElement(self.uid);
+
+            //方法二    
             sfutest.createOffer(
                {
-                  media: { removeAudio:true,removeVideo: true ,audioSend:false,videoSend:false,},
+                  iceRestart: true,
+                  media: { removeVideo: true, removeAudio: true, data: true, audioSend: false, videoSend: false, },
                   success: function (jsep) {
                      Janus.debug(jsep);
-                     sfutest.send({ message: { audio: false, video: false }, "jsep": jsep });
+                     var publish = { "request": "configure", "audio": false, "video": false, "data": true };
+                     sfutest.send({ "message": publish, "jsep": jsep });
                      RemovePlayerElement(self.uid);
                   },
                   error: function (error) {
-                     alert("WebRTC error... " + JSON.stringify(error));
+                     bootbox.alert("WebRTC error... " + JSON.stringify(error));
                   }
                });
+
+            //方法三：断开会，仍会出现一个空白的流 而且其他人重新加入就的时候，这个人还是分享视频的状态
+            // sfutest.createOffer(
+            //    {
+            //       media: { removeVideo: true, removeAudio: true },
+            //       success: function (jsep) {
+            //          Janus.debug(jsep);
+            //          sfutest.send({ message: { audio: true, video: true, }, "jsep": jsep });
+            //setTimeout(function () { publishOwnFeed('none'); }, 3000)
+            //       },
+            //       error: function (error) {
+            //          alert("WebRTC error... " + JSON.stringify(error));
+            //       }
+            //    });
          }
 
          //检测到网络发生变化时，重新进行ICE协商
@@ -902,20 +960,10 @@
             } else {
                console.log("UserOnline Error! 未找到对应的成员");
             }
-
             //重新把发言用户提到前面
-            $.each(self.feeds, function (index, value) {
-               var ele = $(".member-ul li[data-uid='" + value.display + "']");
-               if (ele.length !== 0) {
-                  if (ele.index() === 0) {
-                     //第一个固定不动
-                  } else {
-                     //添加到正在发言人的用户后面
-                     ele.fadeOut(10).fadeIn(100);
-                     $(ele).insertAfter($(".member-ul").find("li").eq(0))
-                  }
-               }
-            });
+            //todo:
+
+
          }
          //用户离线，改变状态
          window.UserOffline = function (uid) {
@@ -1042,7 +1090,7 @@
             } else {
                console.log("GetStopSpeech Error! 未找到对应的成员" + uid);
             }
-            
+
             RemovePlayerElement(uid);
             if (uid == self.uid) {
                self.applying = false;
@@ -1090,10 +1138,11 @@
                   if (ele.find(".icon-video1").hasClass("hide")) {
                      ele.find(".icon-video1").removeClass("hide");
                   }
+                  if (ele.find(".icon-gd").hasClass("hide")) {
+                     ele.find(".icon-gd").removeClass("hide");
+                  }
                   if (self.isAdmin) {
-                     if (ele.find(".icon-gd").hasClass("hide")) {
-                        ele.find(".icon-gd").removeClass("hide");
-                     }
+
                   } else {
                      //添加到正在发言人的用户后面
                      ele.fadeOut(10).fadeIn(100);
@@ -1106,11 +1155,11 @@
                if (ele.length !== 0) {
                   if (!ele.find(".icon-video1").hasClass("hide")) {
                      ele.find(".icon-video1").addClass("hide");
+                  } if (!ele.find(".icon-gd").hasClass("hide")) {
+                     ele.find(".icon-gd").addClass("hide");
                   }
                   if (self.isAdmin) {
-                     if (!ele.find(".icon-gd").hasClass("hide")) {
-                        ele.find(".icon-gd").Class("hide");
-                     }
+
                   } else {
                      //添加到正在发言人的用户后面
                      ele.fadeOut(10).fadeIn(100);
@@ -1346,6 +1395,33 @@
             var self = this;
             var videoDeviceId = self.value_camera;
             var audioDeviceId = self.value_audio;
+            var width = 640;
+            var height = 480;
+
+            if (self.value_profile == '1080p') {
+               width = 1920;
+               height = 1080;
+            }
+            else if (self.value_profile == '720p') {
+               width = 1280;
+               height = 720;
+            } else if (self.value_profile == '480p') {
+               width = 640;
+               height = 480;
+            } else if (self.value_profile == '360p') {
+               width = 640;
+               height = 360;
+            } else if (self.value_profile == '240p') {
+               width = 320;
+               height = 240;
+            } else if (self.value_profile == '180p') {
+               width = 320;
+               height = 180;
+            } else if (self.value_profile == '120p') {
+               width = 160;
+               height = 120;
+            }
+
             var body = { "audio": true, "video": true };
             sfutest.send({ "message": body });
             sfutest.createOffer(
@@ -1361,7 +1437,9 @@
                      video: {
                         deviceId: {
                            exact: videoDeviceId
-                        }
+                        },
+                        width: width,
+                        height: height,
                      },
                      replaceVideo: true,	// This is only needed in case of a renegotiation
                      data: true	// Let's negotiate data channels as well
@@ -1410,18 +1488,17 @@
          ShowCamera: function () {
             var self = this;
             if (self.isAdmin) {
-
-
                self.isOnLive = true;
+               publishOwnFeed("camera");
                //设置为平铺
                self.resharpElementOverlay();
             } else {
                //普通用户开启摄像头
                self.initialize = true;
-               //self.applyingResult || self.isOnLive
-               if (true) {
+               if (self.applyingResult || self.isOnLive) {
                   self.isOnLive = true;
                   self.resharpElementOverlay();
+                  publishOwnFeed("camera");
                } else {
                   this.$message('请先申请发言');
                   return false;
@@ -1431,31 +1508,38 @@
          //切换到屏幕分享显示/切换屏幕分享源
          ShowDesktop: function () {
             var self = this;
-            sfutest.createOffer(
-               {
-                  media: {
-                     video: "screen",
-                     captureDesktopAudio: true,
-                     replaceVideo: true,
-                     replaceAudeo: true,
-                     data: true	// Let's negotiate data channels as well
-                  },
-                  success: function (jsep) {
-                     Janus.debug(jsep);
-                     sfutest.send({ message: { audio: true, video: true, data: true }, "jsep": jsep });
-                  },
-                  error: function (error) {
-                     bootbox.alert("WebRTC error... " + JSON.stringify(error));
-                  }
-               });
+            // sfutest.createOffer(
+            //    {
+            //       media: {
+            //          video: "screen",
+            //          captureDesktopAudio: true,
+            //          replaceVideo: true,
+            //          replaceAudeo: true,
+            //          data: true	// Let's negotiate data channels as well
+            //       },
+            //       success: function (jsep) {
+            //          Janus.debug(jsep);
+            //          sfutest.send({ message: { audio: true, video: true, data: true }, "jsep": jsep });
+            //       },
+            //       error: function (error) {
+            //          bootbox.alert("WebRTC error... " + JSON.stringify(error));
+            //       }
+            //    });
 
             if (self.isAdmin) {
-
+               publishOwnFeed("desktop");
                //设置为平铺
                self.isOnLive = true;
                self.resharpElementOverlay();
             } else {
-
+               if (self.applyingResult || self.isOnLive) {
+                  self.isOnLive = true;
+                  self.resharpElementOverlay();
+                  publishOwnFeed("desktop");
+               } else {
+                  this.$message('请先申请发言');
+                  return false;
+               }
             }
          },
 
@@ -1699,6 +1783,7 @@
             //挂断
             if (command === "none") {
                if (this.isOnLive) {
+                  unpublishOwnFeed();
                   this.isOnLive = false;
                   this.applying = false;
                   this.applyingResult = false;

@@ -39,7 +39,7 @@ function CreatePlayerElement(config){
     }
     //静音视频流标签
     var muteVideo = document.createElement('i');
-    muteVideo.className = 'iconfont icon-videoImg ';
+    muteVideo.className = 'iconfont icon-videoImg';
     muteVideo.setAttribute('title', "暂停");
     mediaControls.appendChild(muteVideo);
     muteVideo.onclick = function () {

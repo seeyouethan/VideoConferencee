@@ -7,3 +7,6 @@
 audio::-webkit-media-controls-enclosure, video::-webkit-media-controls.audio-only [pseudo="-webkit-media-controls-enclosure"] {
    display: none;
 }
+.bg-icon{
+    margin-right: 6px;;
+}
