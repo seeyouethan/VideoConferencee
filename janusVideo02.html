@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <title>管理员测试</title>
+   <title>申志云测试</title>
    <!-- 引入样式 -->
    <link rel="stylesheet" href="css/Element-UI/index.css">
    <link rel="stylesheet" type="text/css" href="css/iconfont.css">
@@ -245,10 +245,8 @@
             isMember: false, //当前用户是否是群组成员，如果不是，则关闭窗口
             hasCamera: false, //是否有摄像头
             conferenceMsgs: [], //群组讨论消息
-            uid: "972597c1-b957-450c-9f2b-c44257bf4fdc", //当前用户的userid
-            //uid: "ccaa5f0c-82cd-4293-8c88-5b9115e0f138", //当前用户的userid
-            trueName: "于江虎", //当前用户的真实姓名
-            //trueName: "张钊源", //当前用户的真实姓名
+            uid: "a99799ee-6a47-4a44-95ad-c6de602d3d04", //当前用户的userid
+            trueName: "申志云", //当前用户的真实姓名
             conferenceId: "07028c69-0399-4edd-b71e-5fff1baf2a03", //当前群组id
             roomId: 19881988,//房间号
             msgContent: "", //发表意见的内容
@@ -397,7 +395,6 @@
 
                                           }
                                           else if (msg["unpublished"] !== undefined && msg["unpublished"] !== null) {
-                                             //leaving和unpublished都会导致无法收到文字消息
                                              var leaving = msg["unpublished"];//要离开的用户的id 并不是真的uid 真的uid是存放在display中的
                                              var remoteFeed = null;
                                              //遍历下远端feeds
@@ -435,9 +432,7 @@
                                        unmuteAudio: null,//静音静音方法
                                        muteVideo: null,//关闭视频方法
                                        unmuteVideo: null,//取消关闭视频方法
-                                       gdVideo: function(){
-                                          unpublishOwnFeed();
-                                       },//挂断图标对应的挂断方法                                       
+                                       gdVideo: null,//挂断图标对应的挂断方法                                       
                                     };
                                     var mediaElement = CreatePlayerElement(config);
                                     Janus.attachMediaStream(mediaElement, stream);
@@ -649,7 +644,6 @@
                         //拒绝发言
                         GetDisAgreeSpeech(content.content)
                      } else if (content.type === 6) {
-                        //xxx发言被挂断
                         GetStopSpeech(content.content)
                      }
                   },
@@ -658,14 +652,8 @@
                   },
                   onlocalstream: function (stream) {
                      // The subscriber stream is recvonly, we don't expect anything here
-                     //debugger;
                   },
                   onremotestream: function (stream) {
-                     var tracks=stream.getVideoTracks();
-                     if(tracks==null || tracks.length==0){
-                        return;
-                     }
-
                      var config = {
                         uid: uid,//当前用户id
                         videoid: 'video_' + uid,//生成的video的id
@@ -679,8 +667,6 @@
                      var mediaElement = CreatePlayerElement(config);
                      Janus.attachMediaStream(mediaElement, stream);
                      UserOnline(uid);
-                     SetIsSpeaking(uid, true);
-
                   },
 
                   oncleanup: function () {
@@ -776,18 +762,8 @@
          }
 
          window.unpublishOwnFeed = function () {
-            sfutest.createOffer(
-               {
-                  media: { removeAudio:true,removeVideo: true ,audioSend:false,videoSend:false,},
-                  success: function (jsep) {
-                     Janus.debug(jsep);
-                     sfutest.send({ message: { audio: false, video: false }, "jsep": jsep });
-                     RemovePlayerElement(self.uid);
-                  },
-                  error: function (error) {
-                     alert("WebRTC error... " + JSON.stringify(error));
-                  }
-               });
+            var unpublish = { "request": "unpublish" };
+            sfutest.send({ "message": unpublish });
          }
 
          //检测到网络发生变化时，重新进行ICE协商
@@ -1042,13 +1018,7 @@
             } else {
                console.log("GetStopSpeech Error! 未找到对应的成员" + uid);
             }
-            
-            RemovePlayerElement(uid);
             if (uid == self.uid) {
-               self.applying = false;
-               self.applyingResult = false;
-               self.applyText = "申请发言";
-
                unpublishOwnFeed();
                self.$message({
                   showClose: true,
@@ -1057,7 +1027,7 @@
                });
             }
          }
-
+         
 
          window.SetUserHangOut = function (uid) {
             var ele = $(".member-ul li[data-uid='" + uid + "']");
@@ -1207,12 +1177,9 @@
             var content = JSON.stringify({ "type": 6, "content": uid });
             sendData(content);
 
-            RemovePlayerElement(uid);
             if (uid == this.uid) {
                //主持人挂断自己               
                unpublishOwnFeed();
-
-
             } else {
                //主持人挂断其他用户，其他用户通过收到对应的消息来unpublishOwnFeed自己
             }
@@ -1699,6 +1666,8 @@
             //挂断
             if (command === "none") {
                if (this.isOnLive) {
+
+
                   this.isOnLive = false;
                   this.applying = false;
                   this.applyingResult = false;

@@ -53,15 +53,14 @@ function CreatePlayerElement(config){
             if (config.muteVideo) config.muteVideo();
         }
     };
-    if (config.gd) {
+    if (config.gdVideo) {
         //挂断标签  
         var gdVideo = document.createElement('i');
         gdVideo.className = 'iconfont icon-gd';
         gdVideo.setAttribute('title', "挂断");
         mediaControls.appendChild(gdVideo);
         gdVideo.onclick = function () {
-            RemoveOnLiveUser(uid)
-            if (config.gdVideo) config.gdVideo();
+            config.gdVideo();
         };
     }   
     //全屏标签
@@ -86,7 +85,11 @@ function CreatePlayerElement(config){
     mediaBox.style.width = width + 'px';
     mediaElementContainer.appendChild(mediaBox);
     var h2 = document.createElement('span');
-    h2.innerHTML = config.realName;
+    if(config.realName && config.realName!=""){
+        h2.innerHTML = config.realName;
+    }else{
+        h2.innerHTML = getTrueNameByUserid(config.uid);
+    }
     h2.className = 'video-title';
     mediaBox.appendChild(h2);
     mediaBox.appendChild(mediaControls);
@@ -123,7 +126,7 @@ function RemovePlayerElement(uid) {
     var ele = $("#videos-container div[data-uid='" + uid + "']");
     if (ele.length > 0) {
         ele.remove();
-    }
+    }    
 }
 
 
@@ -139,3 +142,13 @@ function launchFullscreen(element) {
         element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
     }
 }
+
+
+function getTrueNameByUserid(uid) {
+    var ele = $(".member-ul li[data-uid='" + uid + "']");
+    if (ele.length !== 0) {
+        return ele.attr("data-title");
+    }
+    return "";
+ }
+ 

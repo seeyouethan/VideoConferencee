@@ -28,7 +28,7 @@ textarea{resize:none;padding:5px!important;line-height:24px;font-family:"Microso
 .float-r{float:right}
 .inline-block{display:inline-block;zoom:1}
 .block{display:block}
-.hide{display:none}
+.hide{display:none !important;}
 .vam{vertical-align:middle}
 .text-center{text-align:center}
 .text-right{text-align:right}
