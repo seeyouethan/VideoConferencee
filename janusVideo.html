@@ -250,7 +250,7 @@
             trueName: "于江虎", //当前用户的真实姓名
             //trueName: "张钊源", //当前用户的真实姓名
             conferenceId: "07028c69-0399-4edd-b71e-5fff1baf2a03", //当前群组id
-            roomId: 19881988,//房间号
+            roomId: 198819881,//房间号
             msgContent: "", //发表意见的内容
             btnDisable: false,
             datetime: new Date().Format("yyyy-MM-dd HH:mm:ss"), //右侧讨论区滚动的时候，请求数据的时候，请求小于这个时间的10条数据
@@ -432,7 +432,7 @@
                                     }
 
                                     //本地视频流
-                                    var config = {
+                                    var config = {                                       
                                        uid: self.uid,//当前用户id
                                        videoid: 'video_' + self.uid,//生成的video的id
                                        realName: self.trueName,//真实姓名
@@ -575,7 +575,7 @@
          }
          window.createRoom = function () {
             //创建房间
-            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 128 * 1024 };
+            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 1024 * 1024 };
             sfutest.send({
                "message": body,
                success: function (result) {
@@ -792,6 +792,11 @@
                   callback = function () { };
                }, false);
             });
+         }
+
+         window.changeBitrate = function(value){
+            var bitrate = parseInt(value) * 1024;
+            sfutest.send({ "message": { "request": "configure", "bitrate": bitrate } });
          }
 
          //发送聊天消息

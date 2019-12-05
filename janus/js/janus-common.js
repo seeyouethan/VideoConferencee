@@ -122,8 +122,8 @@ function CreatePlayerElement(config) {
         mediaElement.srcObject = mediaStream;
     }
     mediaElementContainer.appendChild(mediaElement);
-    if (config.gd) {
-        //如果有挂断标签，那么表示是自己的视频界面，添加到第一个
+    if (config.gdVideo) {
+        //有挂断标签，表示是自己的视频界面，添加到第一个
         $(mediaElementContainer).prependTo($("#videos-container"));
         //自己把自己的video静音
         mediaElement.muted = true;
