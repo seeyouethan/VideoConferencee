@@ -443,23 +443,39 @@
                                           sfutest.unmuteAudio();
                                        },//静音静音方法
                                        muteVideo: function () {
-                                          unpublishOwnFeed();
-                                       },//关闭视频方法
-                                       unmuteVideo: function () {
                                           sfutest.createOffer(
                                              {
-                                                media: { addVideo: true },
+                                                media: { removeVideo: true, removeAudio: !self.hasCamera, },
                                                 success: function (jsep) {
                                                    Janus.debug(jsep);
-                                                   sfutest.send({ message: { audio: true, video: true }, "jsep": jsep });
+                                                   sfutest.send({ message: { audio: true, video: true, }, "jsep": jsep });
                                                 },
                                                 error: function (error) {
                                                    alert("WebRTC error... " + JSON.stringify(error));
                                                 }
                                              });
+                                       },//关闭视频方法
+                                       unmuteVideo: function () {
+                                          if (self.hasCamera) {
+                                             sfutest.createOffer(
+                                                {
+                                                   media: { addVideo: true },
+                                                   success: function (jsep) {
+                                                      Janus.debug(jsep);
+                                                      sfutest.send({ message: { audio: true, video: true }, "jsep": jsep });
+                                                   },
+                                                   error: function (error) {
+                                                      alert("WebRTC error... " + JSON.stringify(error));
+                                                   }
+                                                });
+                                          }
+                                          else {
+                                             publishOwnFeed('desktop');
+                                          }
                                        },//取消关闭视频方法
                                        gdVideo: function () {
                                           unpublishOwnFeed();
+                                          SetIsSpeaking(self.uid, false);
                                        },//挂断图标对应的挂断方法                                       
                                     };
                                     var mediaElement = CreatePlayerElement(config);
@@ -511,6 +527,7 @@
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         SetIsSpeaking(self.uid, true);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -530,6 +547,8 @@
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        SetIsSpeaking(self.uid, true);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -545,6 +564,7 @@
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -805,7 +825,7 @@
                }
             });
          }
-        
+
 
          window.unpublishOwnFeed = function () {
             //挂断自己的时候，先发布一个unpublish，然后过3秒钟再重新发一个重连的操作
@@ -827,6 +847,7 @@
                      var publish = { "request": "configure", "audio": false, "video": false, "data": true };
                      sfutest.send({ "message": publish, "jsep": jsep });
                      RemovePlayerElement(self.uid);
+                     self.liveType = "none";
                   },
                   error: function (error) {
                      bootbox.alert("WebRTC error... " + JSON.stringify(error));
@@ -1304,10 +1325,14 @@
 
          //显示设置界面并绑定对应的数据源
          ShowSettingDialog: function () {
+            if (this.liveType != 'camera') {
+               return;
+            }
             if (!this.hasCamera) {
                this.$message.error('未能获取到摄像头设备，请确认摄像头已经连接成功！');
                return;
             }
+            
             this.dialogVisible = true;
             this.videoinputList = [];
             this.audioinputList = [];

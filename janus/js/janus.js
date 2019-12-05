@@ -2207,9 +2207,12 @@ function Janus(gatewayCallbacks) {
 								if(isAudioSendEnabled(media) && !media.keepAudio) {
 									navigator.mediaDevices.getUserMedia({ audio: true, video: false })
 									.then(function (audioStream) {
+										// stream.addTrack(audioStream.getAudioTracks()[0]);
+										// streamsDone(handleId, jsep, media, callbacks, stream);
 										stream.addTrack(audioStream.getAudioTracks()[0]);
-										streamsDone(handleId, jsep, media, callbacks, stream);
-									})
+                                            streamsDone(handleId, jsep, media, callbacks, stream);
+										}, error => { streamsDone(handleId, jsep, media, callbacks, stream) 
+									})									
 								} else {
 									streamsDone(handleId, jsep, media, callbacks, stream);
 								}

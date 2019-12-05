@@ -2,7 +2,7 @@
 // uid表示当前用户的id  创建的容器，都添加到了id为 videos-container 的div中
 // videoid表示video标签的id,这个id是trtc生成的id selfRtc.localStream_.getId()
 // config表示一些配置 里面包含了一些onclick方法以及一些属性等等
-function CreatePlayerElement(config){
+function CreatePlayerElement(config) {
     var uid = config.uid;
     //如果有，先移除这个div 防止重复添加
     RemovePlayerElement(uid);
@@ -30,11 +30,17 @@ function CreatePlayerElement(config){
         if (muteAudio.className.indexOf('icon-yyG') != -1) {
             muteAudio.className = muteAudio.className.replace('icon-yyG', 'icon-yy');
             muteAudio.setAttribute('title', "静音");
-            if (config.unmuteAudio) config.unmuteAudio();
+            if (config.unmuteAudio) {config.unmuteAudio();}else{
+                document.getElementById(config.videoid).muted=false;
+                document.getElementById(config.videoid).volume=0;
+            }
         } else {
             muteAudio.className = muteAudio.className.replace('icon-yy', 'icon-yyG');
             muteAudio.setAttribute('title', "取消静音");
-            if (config.muteAudio) config.muteAudio();
+            if (config.muteAudio) {config.muteAudio();}else{
+                document.getElementById(config.videoid).muted=true;
+                document.getElementById(config.videoid).volume=1;
+            }
         }
     }
     //静音视频流标签
@@ -46,11 +52,15 @@ function CreatePlayerElement(config){
         if (muteVideo.className.indexOf('icon-videoImgNo') != -1) {
             muteVideo.className = muteVideo.className.replace('icon-videoImg icon-videoImgNo', 'icon-videoImg');
             muteVideo.setAttribute('title', "暂停");
-            if (config.unmuteVideo) config.unmuteVideo();
+            if (config.unmuteVideo) { config.unmuteVideo(); } else {
+                document.getElementById(config.videoid).play();
+            }
         } else {
             muteVideo.className = muteVideo.className.replace('icon-videoImg', 'icon-videoImg icon-videoImgNo');
             muteVideo.setAttribute('title', "播放");
-            if (config.muteVideo) config.muteVideo();
+            if (config.muteVideo) {config.muteVideo();}else{
+                document.getElementById(config.videoid).pause();
+            }
         }
     };
     if (config.gdVideo) {
@@ -62,7 +72,7 @@ function CreatePlayerElement(config){
         gdVideo.onclick = function () {
             config.gdVideo();
         };
-    }   
+    }
     //全屏标签
     var zoom = document.createElement('i');
     zoom.className = 'iconfont icon-fullScreen ';
@@ -85,9 +95,9 @@ function CreatePlayerElement(config){
     mediaBox.style.width = width + 'px';
     mediaElementContainer.appendChild(mediaBox);
     var h2 = document.createElement('span');
-    if(config.realName && config.realName!=""){
+    if (config.realName && config.realName != "") {
         h2.innerHTML = config.realName;
-    }else{
+    } else {
         h2.innerHTML = getTrueNameByUserid(config.uid);
     }
     h2.className = 'video-title';
@@ -115,6 +125,9 @@ function CreatePlayerElement(config){
     if (config.gd) {
         //如果有挂断标签，那么表示是自己的视频界面，添加到第一个
         $(mediaElementContainer).prependTo($("#videos-container"));
+        //自己把自己的video静音
+        mediaElement.muted = true;
+        mediaElement.volume = 0;
     } else {
         document.getElementById('videos-container').appendChild(mediaElementContainer);
     }
@@ -126,7 +139,7 @@ function RemovePlayerElement(uid) {
     var ele = $("#videos-container div[data-uid='" + uid + "']");
     if (ele.length > 0) {
         ele.remove();
-    }    
+    }
 }
 
 
@@ -150,5 +163,4 @@ function getTrueNameByUserid(uid) {
         return ele.attr("data-title");
     }
     return "";
- }
- 
+}
