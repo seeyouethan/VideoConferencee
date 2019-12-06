@@ -246,9 +246,10 @@
             hasCamera: false, //是否有摄像头
             conferenceMsgs: [], //群组讨论消息
             uid: "ccaa5f0c-82cd-4293-8c88-5b9115e0f138", //当前用户的userid
+           
             trueName: "张钊源", //当前用户的真实姓名
             conferenceId: "07028c69-0399-4edd-b71e-5fff1baf2a03", //当前群组id
-            roomId: 19881988,//房间号
+            roomId: 198819881,//房间号
             msgContent: "", //发表意见的内容
             btnDisable: false,
             datetime: new Date().Format("yyyy-MM-dd HH:mm:ss"), //右侧讨论区滚动的时候，请求数据的时候，请求小于这个时间的10条数据
@@ -267,7 +268,7 @@
       },
       created: function () {
          var self = this;
-         var server = "https://janus.guoshuai.xyz:8089/janus";
+         var server = "https://rtc.cnki.net/janus";
          //var server = "https://janus.conf.meetecho.com/janus";
          // if (window.location.protocol === 'http:')
          //    server = "http://" + server + ":8088/janus";
@@ -282,7 +283,7 @@
 
          window.CreateJanus = function () {
             Janus.init({
-               debug: "all",
+               //debug: "all",
                callback: function () {
 
                   if (!Janus.isWebrtcSupported()) {
@@ -314,7 +315,6 @@
                                  },
                                  mediaState: function (medium, on) {
                                     Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
-                                    
                                  },
                                  webrtcState: function (on) {
                                     if (!on) {
@@ -426,7 +426,7 @@
                                  },
                                  onlocalstream: function (stream) {
 
-                                    if(stream.getVideoTracks().length==0){
+                                    if (stream.getVideoTracks().length == 0) {
                                        return;
                                     }
 
@@ -442,36 +442,39 @@
                                           sfutest.unmuteAudio();
                                        },//静音静音方法
                                        muteVideo: function () {
-
-
                                           sfutest.createOffer(
                                              {
-                                                //media: { removeAudio: true},
-                                                media: { removeVideo: true,replaceVideo: true,removeAudio: true,replaceAudio: true  ,audioSend: false, videoSend: false, data: true,},
-                                                success: function (jsep) {
-                                                      Janus.debug(jsep);
-                                                      sfutest.send({ message: { audio: true, video: true }, "jsep": jsep ,});
-                                                   },
-                                                   error: function (error) {
-                                                      alert("WebRTC error... " + JSON.stringify(error));
-                                                   }
-                                                });
-                                       },//关闭视频方法
-                                       unmuteVideo: function () {
-                                          sfutest.createOffer(
-                                             {
-                                                media: { addVideo: true },
+                                                media: { removeVideo: true, removeAudio: !self.hasCamera, },
                                                 success: function (jsep) {
                                                    Janus.debug(jsep);
-                                                   sfutest.send({ message: { audio: true, video: true }, "jsep": jsep });
+                                                   sfutest.send({ message: { audio: true, video: true, }, "jsep": jsep });
                                                 },
                                                 error: function (error) {
                                                    alert("WebRTC error... " + JSON.stringify(error));
                                                 }
                                              });
+                                       },//关闭视频方法
+                                       unmuteVideo: function () {
+                                          if (self.hasCamera) {
+                                             sfutest.createOffer(
+                                                {
+                                                   media: { addVideo: true },
+                                                   success: function (jsep) {
+                                                      Janus.debug(jsep);
+                                                      sfutest.send({ message: { audio: true, video: true }, "jsep": jsep });
+                                                   },
+                                                   error: function (error) {
+                                                      alert("WebRTC error... " + JSON.stringify(error));
+                                                   }
+                                                });
+                                          }
+                                          else {
+                                             publishOwnFeed('desktop');
+                                          }
                                        },//取消关闭视频方法
                                        gdVideo: function () {
                                           unpublishOwnFeed();
+                                          SetIsSpeaking(self.uid, false);
                                        },//挂断图标对应的挂断方法                                       
                                     };
                                     var mediaElement = CreatePlayerElement(config);
@@ -517,11 +520,17 @@
                //分享摄像头
                sfutest.createOffer(
                   {
-                     media: { audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true },	// Publishers are sendonly
+                     media: {
+                        audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true,
+                        replaceVideo: true,
+                        replaceAudeo: true,
+                     },	// Publishers are sendonly
                      success: function (jsep) {
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        SetIsSpeaking(self.uid, true);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -541,6 +550,8 @@
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        SetIsSpeaking(self.uid, true);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -551,11 +562,12 @@
                //只观看，什么都不分享
                sfutest.createOffer(
                   {
-                     media: { audioRecv: false, videoRecv: false, audioSend: false, videoSend: false, data: true,update:true, },
+                     media: { audioRecv: false, videoRecv: false, audioSend: false, videoSend: false, data: true, },
                      success: function (jsep) {
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
+                        self.liveType = type;
                      },
                      error: function (error) {
                         Janus.error("WebRTC error:", error);
@@ -566,7 +578,7 @@
          }
          window.createRoom = function () {
             //创建房间
-            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 128 * 1024 };
+            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 4*1024 * 1024 };
             sfutest.send({
                "message": body,
                success: function (result) {
@@ -627,6 +639,7 @@
                               self.remoteFeeds.splice(index, 1);
                            }
                            self.remoteFeeds.push(remoteFeed);
+                           SetIsSpeaking(uid, false)
                            if (audio != null || video != null) {
                               SetIsSpeaking(uid, true)
                            }
@@ -709,9 +722,11 @@
                      //debugger;
                   },
                   onremotestream: function (stream) {
+
+
                      stream.oninactive = function (event) {
                         RemovePlayerElement(uid);
-                        SetIsSpeaking(uid,false);
+                        SetIsSpeaking(uid, false);
                         return false;
                      };
 
@@ -782,6 +797,11 @@
             });
          }
 
+         window.changeBitrate = function (value) {
+            var bitrate = parseInt(value) * 1024;
+            sfutest.send({ "message": { "request": "configure", "bitrate": bitrate } });
+         }
+
          //发送聊天消息
          window.sendData = function (content) {
             /*
@@ -813,16 +833,7 @@
                }
             });
          }
-         window.toggleMute = function () {
-            var muted = sfutest.isAudioMuted();
-            Janus.log((muted ? "Unmuting" : "Muting") + " local stream...");
-            if (muted)
-               sfutest.unmuteAudio();
-            else
-               sfutest.muteAudio();
-            muted = sfutest.isAudioMuted();
-            $('#mute').val(muted ? "Unmute" : "Mute");
-         }
+
 
          window.unpublishOwnFeed = function () {
             //挂断自己的时候，先发布一个unpublish，然后过3秒钟再重新发一个重连的操作
@@ -834,36 +845,36 @@
 
             // RemovePlayerElement(self.uid);
 
-            //方法二：断开会，仍会出现一个空白的流            
+            //方法二    
             sfutest.createOffer(
-                {
-                    iceRestart: true,
-                    media: { removeVideo: true, removeAudio: true, data: true, audioSend: false, videoSend: false, },
-                    success: function (jsep) {
-                        Janus.debug(jsep);
-                        var publish = { "request": "configure", "audio": false, "video": false, "data": true };
-                        sfutest.send({ "message": publish, "jsep": jsep });
-                        RemovePlayerElement(self.uid);
-                    },
-                    error: function (error) {
-                        bootbox.alert("WebRTC error... " + JSON.stringify(error));
-                    }
-                });
+               {
+                  iceRestart: true,
+                  media: { removeVideo: true, removeAudio: true, data: true, audioSend: false, videoSend: false, },
+                  success: function (jsep) {
+                     Janus.debug(jsep);
+                     var publish = { "request": "configure", "audio": false, "video": false, "data": true };
+                     sfutest.send({ "message": publish, "jsep": jsep });
+                     RemovePlayerElement(self.uid);
+                     self.liveType = "none";
+                  },
+                  error: function (error) {
+                     bootbox.alert("WebRTC error... " + JSON.stringify(error));
+                  }
+               });
 
             //方法三：断开会，仍会出现一个空白的流 而且其他人重新加入就的时候，这个人还是分享视频的状态
             // sfutest.createOffer(
             //    {
-            //       media: { removeVideo: true, removeAudio: true,},
+            //       media: { removeVideo: true, removeAudio: true },
             //       success: function (jsep) {
             //          Janus.debug(jsep);
-            //          sfutest.send({ message: { audio: true, video: true, }, "jsep": jsep} );
-            //          //publishOwnFeed('none');
-                     
+            //          sfutest.send({ message: { audio: true, video: true, }, "jsep": jsep });
+            //setTimeout(function () { publishOwnFeed('none'); }, 3000)
             //       },
             //       error: function (error) {
             //          alert("WebRTC error... " + JSON.stringify(error));
             //       }
-            //     });
+            //    });
          }
 
          //检测到网络发生变化时，重新进行ICE协商
@@ -978,20 +989,10 @@
             } else {
                console.log("UserOnline Error! 未找到对应的成员");
             }
-
             //重新把发言用户提到前面
-            $.each(self.feeds, function (index, value) {
-               var ele = $(".member-ul li[data-uid='" + value.display + "']");
-               if (ele.length !== 0) {
-                  if (ele.index() === 0) {
-                     //第一个固定不动
-                  } else {
-                     //添加到正在发言人的用户后面
-                     ele.fadeOut(10).fadeIn(100);
-                     $(ele).insertAfter($(".member-ul").find("li").eq(0))
-                  }
-               }
-            });
+            //todo:
+
+
          }
          //用户离线，改变状态
          window.UserOffline = function (uid) {
@@ -1166,10 +1167,11 @@
                   if (ele.find(".icon-video1").hasClass("hide")) {
                      ele.find(".icon-video1").removeClass("hide");
                   }
+                  if (ele.find(".icon-gd").hasClass("hide")) {
+                     ele.find(".icon-gd").removeClass("hide");
+                  }
                   if (self.isAdmin) {
-                     if (ele.find(".icon-gd").hasClass("hide")) {
-                        ele.find(".icon-gd").removeClass("hide");
-                     }
+
                   } else {
                      //添加到正在发言人的用户后面
                      ele.fadeOut(10).fadeIn(100);
@@ -1182,11 +1184,11 @@
                if (ele.length !== 0) {
                   if (!ele.find(".icon-video1").hasClass("hide")) {
                      ele.find(".icon-video1").addClass("hide");
+                  } if (!ele.find(".icon-gd").hasClass("hide")) {
+                     ele.find(".icon-gd").addClass("hide");
                   }
                   if (self.isAdmin) {
-                     if (!ele.find(".icon-gd").hasClass("hide")) {
-                        ele.find(".icon-gd").Class("hide");
-                     }
+
                   } else {
                      //添加到正在发言人的用户后面
                      ele.fadeOut(10).fadeIn(100);
@@ -1285,10 +1287,9 @@
 
             RemovePlayerElement(uid);
             if (uid == this.uid) {
-               //主持人挂断自己               
+               //主持人挂断自己       
+               //this.ChangeVideoSource("none");
                unpublishOwnFeed();
-
-
             } else {
                //主持人挂断其他用户，其他用户通过收到对应的消息来unpublishOwnFeed自己
             }
@@ -1331,10 +1332,14 @@
 
          //显示设置界面并绑定对应的数据源
          ShowSettingDialog: function () {
+            if (this.liveType != 'camera') {
+               return;
+            }
             if (!this.hasCamera) {
                this.$message.error('未能获取到摄像头设备，请确认摄像头已经连接成功！');
                return;
             }
+
             this.dialogVisible = true;
             this.videoinputList = [];
             this.audioinputList = [];
@@ -1422,6 +1427,33 @@
             var self = this;
             var videoDeviceId = self.value_camera;
             var audioDeviceId = self.value_audio;
+            var width = 640;
+            var height = 480;
+
+            if (self.value_profile == '1080p') {
+               width = 1920;
+               height = 1080;
+            }
+            else if (self.value_profile == '720p') {
+               width = 1280;
+               height = 720;
+            } else if (self.value_profile == '480p') {
+               width = 640;
+               height = 480;
+            } else if (self.value_profile == '360p') {
+               width = 640;
+               height = 360;
+            } else if (self.value_profile == '240p') {
+               width = 320;
+               height = 240;
+            } else if (self.value_profile == '180p') {
+               width = 320;
+               height = 180;
+            } else if (self.value_profile == '120p') {
+               width = 160;
+               height = 120;
+            }
+
             var body = { "audio": true, "video": true };
             sfutest.send({ "message": body });
             sfutest.createOffer(
@@ -1437,7 +1469,9 @@
                      video: {
                         deviceId: {
                            exact: videoDeviceId
-                        }
+                        },
+                        width: width,
+                        height: height,
                      },
                      replaceVideo: true,	// This is only needed in case of a renegotiation
                      data: true	// Let's negotiate data channels as well
@@ -1781,6 +1815,7 @@
             //挂断
             if (command === "none") {
                if (this.isOnLive) {
+                  unpublishOwnFeed();
                   this.isOnLive = false;
                   this.applying = false;
                   this.applyingResult = false;

@@ -269,7 +269,7 @@
       },
       created: function () {
          var self = this;
-         var server = "https://janus.guoshuai.xyz:8089/janus";
+         var server = "https://rtc.cnki.net/janus";
          //var server = "https://janus.conf.meetecho.com/janus";
          // if (window.location.protocol === 'http:')
          //    server = "http://" + server + ":8088/janus";
@@ -432,7 +432,7 @@
                                     }
 
                                     //本地视频流
-                                    var config = {                                       
+                                    var config = {
                                        uid: self.uid,//当前用户id
                                        videoid: 'video_' + self.uid,//生成的video的id
                                        realName: self.trueName,//真实姓名
@@ -521,7 +521,11 @@
                //分享摄像头
                sfutest.createOffer(
                   {
-                     media: { audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true },	// Publishers are sendonly
+                     media: {
+                        audioRecv: false, videoRecv: false, audioSend: true, videoSend: true, data: true,
+                        replaceVideo: true,
+                        replaceAudeo: true,
+                     },	// Publishers are sendonly
                      success: function (jsep) {
                         var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
@@ -575,7 +579,7 @@
          }
          window.createRoom = function () {
             //创建房间
-            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 1024 * 1024 };
+            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 4*1024 * 1024 };
             sfutest.send({
                "message": body,
                success: function (result) {
@@ -794,7 +798,7 @@
             });
          }
 
-         window.changeBitrate = function(value){
+         window.changeBitrate = function (value) {
             var bitrate = parseInt(value) * 1024;
             sfutest.send({ "message": { "request": "configure", "bitrate": bitrate } });
          }
@@ -1284,10 +1288,9 @@
 
             RemovePlayerElement(uid);
             if (uid == this.uid) {
-               //主持人挂断自己               
+               //主持人挂断自己       
+               //this.ChangeVideoSource("none");
                unpublishOwnFeed();
-
-
             } else {
                //主持人挂断其他用户，其他用户通过收到对应的消息来unpublishOwnFeed自己
             }
@@ -1337,7 +1340,7 @@
                this.$message.error('未能获取到摄像头设备，请确认摄像头已经连接成功！');
                return;
             }
-            
+
             this.dialogVisible = true;
             this.videoinputList = [];
             this.audioinputList = [];
