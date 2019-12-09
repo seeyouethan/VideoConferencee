@@ -527,7 +527,7 @@
                         replaceAudeo: true,
                      },	// Publishers are sendonly
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true };
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         SetIsSpeaking(self.uid, true);
@@ -548,7 +548,7 @@
                         replaceAudeo: true,
                      },
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true };
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         SetIsSpeaking(self.uid, true);
@@ -565,7 +565,7 @@
                   {
                      media: { audioRecv: false, videoRecv: false, audioSend: false, videoSend: false, data: true, },
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true };
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         self.liveType = type;
@@ -837,6 +837,9 @@
 
 
          window.unpublishOwnFeed = function () {
+            self.applying = false;
+            self.applyingResult = false;
+            self.applyText = "申请发言";
             //挂断自己的时候，先发布一个unpublish，然后过3秒钟再重新发一个重连的操作
 
             // var unpublish = { "request": "unpublish" };

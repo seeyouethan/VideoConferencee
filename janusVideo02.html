@@ -836,6 +836,11 @@
 
 
          window.unpublishOwnFeed = function () {
+            
+            self.applying = false;
+            self.applyingResult = false;
+            self.applyText = "申请发言";
+
             //挂断自己的时候，先发布一个unpublish，然后过3秒钟再重新发一个重连的操作
 
             // var unpublish = { "request": "unpublish" };
@@ -1122,10 +1127,6 @@
 
             RemovePlayerElement(uid);
             if (uid == self.uid) {
-               self.applying = false;
-               self.applyingResult = false;
-               self.applyText = "申请发言";
-
                unpublishOwnFeed();
                self.$message({
                   showClose: true,
