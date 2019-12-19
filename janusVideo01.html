@@ -283,7 +283,7 @@
 
          window.CreateJanus = function () {
             Janus.init({
-               //debug: "all",
+               debug: "all",
                callback: function () {
 
                   if (!Janus.isWebrtcSupported()) {
@@ -293,7 +293,7 @@
                   janus = new Janus(
                      {
                         server: server,
-                        iceServers: [{ urls: "stun:janus.guoshuai.xyz:3478" }, { urls: "turn:janus.guoshuai.xyz:3478", username: "cnki", credential: "123456" }],
+                        iceServers: [{ urls: "stun:www.385073012.cn:3478" }, { urls: "turn:www.385073012.cn:3478", username: "cnki", credential: "123456" }],
                         success: function () {
                            janus.attach(
                               {
