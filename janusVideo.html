@@ -527,7 +527,7 @@
                         replaceAudeo: true,
                      },	// Publishers are sendonly
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,};
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         SetIsSpeaking(self.uid, true);
@@ -548,7 +548,7 @@
                         replaceAudeo: true,
                      },
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         SetIsSpeaking(self.uid, true);
@@ -565,7 +565,7 @@
                   {
                      media: { audioRecv: false, videoRecv: false, audioSend: false, videoSend: false, data: true, },
                      success: function (jsep) {
-                        var publish = { "request": "configure", "audio": true, "video": true, "data": true ,"bitrate":4*1024*1024};
+                        var publish = { "request": "configure", "audio": true, "video": true, "data": true };
                         sfutest.send({ "message": publish, "jsep": jsep });
                         UserOnline(self.uid);
                         self.liveType = type;
@@ -579,7 +579,7 @@
          }
          window.createRoom = function () {
             //创建房间
-            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 4*1024 * 1024 };
+            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 4*1024 * 1024 ,"bitrate_cap":true,};
             sfutest.send({
                "message": body,
                success: function (result) {
@@ -893,7 +893,22 @@
          }
 
 
+         function removeSream() {
+            first = true;
+            sfutest.createOffer(
+                {
+                    media: { removeVideo: true, removeAudio: true, data: true, audioSend: false, videoSend: false },
+                    success: function (jsep) {
+                        Janus.debug(jsep);
+                        var publish = { "request": "configure", "audio": false, "video": false, "data": true, refresh: true };
+                        sfutest.send({ "message": publish, "jsep": jsep });
+                    },
+                    error: function (error) {
+                        bootbox.alert("WebRTC error... " + JSON.stringify(error));
+                    }
+                });
 
+        }
 
          var indexChrome = navigator.userAgent.indexOf("Chrome");
          if (indexChrome != -1) {
