@@ -250,7 +250,7 @@
             trueName: "于江虎", //当前用户的真实姓名
             //trueName: "张钊源", //当前用户的真实姓名
             conferenceId: "07028c69-0399-4edd-b71e-5fff1baf2a03", //当前群组id
-            roomId: 198819881,//房间号
+            roomId: 1198819881,//房间号
             msgContent: "", //发表意见的内容
             btnDisable: false,
             datetime: new Date().Format("yyyy-MM-dd HH:mm:ss"), //右侧讨论区滚动的时候，请求数据的时候，请求小于这个时间的10条数据
@@ -271,7 +271,7 @@
          var self = this;
 
          var server = [
-            "wss://rtc.cnki.net/janus",
+            "wss://janus.guoshuai.xyz:8989",
             "/janus"
         ];
          //var server = "https://rtc.cnki.net/janus";
@@ -587,7 +587,7 @@
          }
          window.createRoom = function () {
             //创建房间
-            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 4 * 1024 * 1024, "bitrate_cap": true, };
+            var body = { "request": "create", "room": self.roomId, "publishers": 100, "bitrate": 128 * 1024, "bitrate_cap": true, };
             sfutest.send({
                "message": body,
                success: function (result) {
