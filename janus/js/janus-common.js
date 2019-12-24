@@ -32,14 +32,14 @@ function CreatePlayerElement(config) {
             muteAudio.setAttribute('title', "静音");
             if (config.unmuteAudio) {config.unmuteAudio();}else{
                 document.getElementById(config.videoid).muted=false;
-                document.getElementById(config.videoid).volume=0;
+                document.getElementById(config.videoid).volume=1;
             }
         } else {
             muteAudio.className = muteAudio.className.replace('icon-yy', 'icon-yyG');
             muteAudio.setAttribute('title', "取消静音");
             if (config.muteAudio) {config.muteAudio();}else{
                 document.getElementById(config.videoid).muted=true;
-                document.getElementById(config.videoid).volume=1;
+                document.getElementById(config.videoid).volume=0;
             }
         }
     }
@@ -131,6 +131,8 @@ function CreatePlayerElement(config) {
     } else {
         document.getElementById('videos-container').appendChild(mediaElementContainer);
     }
+    
+    //SetIsSpeaking(uid,true);
     return mediaElement;
 }
 
@@ -139,6 +141,7 @@ function RemovePlayerElement(uid) {
     var ele = $("#videos-container div[data-uid='" + uid + "']");
     if (ele.length > 0) {
         ele.remove();
+        //SetIsSpeaking(uid,false);
     }
 }
 

@@ -327,6 +327,9 @@
                                        //加載中...
                                        return;
                                     }
+                                    //上一次协商结束
+                                    
+
                                     if (self.isAdmin || self.applyingResult || self.isOnLive) {
 
                                     } else {
@@ -1194,6 +1197,7 @@
          window.SetIsSpeaking = function (uid, b) {
             var ele = $(".member-ul li[data-uid='" + uid + "']");
             if (b) {
+
                if (ele.length !== 0) {
                   if (self.isAdmin) {
                      if (ele.find(".icon-video1").hasClass("hide")) {
@@ -1203,7 +1207,18 @@
                         ele.find(".icon-gd").removeClass("hide");
                      }
                   } else {
-                     if (self.applyingResult || self.isOnLive) {
+                     if(uid==self.uid){
+                        if (self.applyingResult || self.isOnLive) {
+                           if (ele.find(".icon-video1").hasClass("hide")) {
+                           ele.find(".icon-video1").removeClass("hide");
+                        }
+                        if (ele.find(".icon-gd").hasClass("hide")) {
+                           ele.find(".icon-gd").removeClass("hide");
+                        }//添加到正在发言人的用户后面
+                        ele.fadeOut(10).fadeIn(100);
+                        $(ele).insertAfter($(".member-ul").find("li").eq(0))
+                        }
+                     }else{
                         if (ele.find(".icon-video1").hasClass("hide")) {
                            ele.find(".icon-video1").removeClass("hide");
                         }
@@ -1213,7 +1228,6 @@
                         ele.fadeOut(10).fadeIn(100);
                         $(ele).insertAfter($(".member-ul").find("li").eq(0))
                      }
-
                   }
                } else {
                   console.log("更新左侧的发言状态 Error! 未找到对应的成员");
@@ -1232,7 +1246,6 @@
                      ele.fadeOut(10).fadeIn(100);
                      $(ele).insertAfter($(".member-ul").find("li").eq(0))
                   }
-
                } else {
                   console.log("更新左侧的发言状态 Error! 未找到对应的成员");
                }

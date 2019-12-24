@@ -1212,7 +1212,18 @@
                         ele.find(".icon-gd").removeClass("hide");
                      }
                   } else {
-                     if (self.applyingResult || self.isOnLive) {
+                     if(uid==self.uid){
+                        if (self.applyingResult || self.isOnLive) {
+                           if (ele.find(".icon-video1").hasClass("hide")) {
+                           ele.find(".icon-video1").removeClass("hide");
+                        }
+                        if (ele.find(".icon-gd").hasClass("hide")) {
+                           ele.find(".icon-gd").removeClass("hide");
+                        }//添加到正在发言人的用户后面
+                        ele.fadeOut(10).fadeIn(100);
+                        $(ele).insertAfter($(".member-ul").find("li").eq(0))
+                        }
+                     }else{
                         if (ele.find(".icon-video1").hasClass("hide")) {
                            ele.find(".icon-video1").removeClass("hide");
                         }
@@ -1222,6 +1233,7 @@
                         ele.fadeOut(10).fadeIn(100);
                         $(ele).insertAfter($(".member-ul").find("li").eq(0))
                      }
+                     
 
                   }
                } else {
@@ -1863,12 +1875,11 @@
             if (command === "none") {
                if (this.isOnLive) {
                   unpublishOwnFeed();
-                  this.isOnLive = false;
+               }
+               this.isOnLive = false;
                   this.applying = false;
                   this.applyingResult = false;
                   this.applyText = "申请发言";
-                  return;
-               }
             }
             //摄像头
             if (command === "camera") {
