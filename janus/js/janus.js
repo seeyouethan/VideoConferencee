@@ -495,11 +495,11 @@ function Janus(gatewayCallbacks) {
 	if(gatewayCallbacks.destroyOnUnload !== undefined && gatewayCallbacks.destroyOnUnload !== null)
 		this.destroyOnUnload = (gatewayCallbacks.destroyOnUnload === true);
 	// Some timeout-related values
-	var keepAlivePeriod = 25000;
+	var keepAlivePeriod = 5000;
 	if(gatewayCallbacks.keepAlivePeriod !== undefined && gatewayCallbacks.keepAlivePeriod !== null)
 		keepAlivePeriod = gatewayCallbacks.keepAlivePeriod;
 	if(isNaN(keepAlivePeriod))
-		keepAlivePeriod = 25000;
+		keepAlivePeriod = 5000;
 	var longPollTimeout = 60000;
 	if(gatewayCallbacks.longPollTimeout !== undefined && gatewayCallbacks.longPollTimeout !== null)
 		longPollTimeout = gatewayCallbacks.longPollTimeout;
